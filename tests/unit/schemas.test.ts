@@ -39,7 +39,7 @@ describe("Schemas", () => {
             items: [] // empty array not allowed since it's NonEmptyArray
         }
 
-        const decode = Schema.decodeUnknown(CreateInvoice)
+        const decode = Schema.decodeUnknownSync(CreateInvoice)
         let err = null
         try {
             decode(payload)

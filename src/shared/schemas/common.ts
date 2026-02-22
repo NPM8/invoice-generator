@@ -53,7 +53,7 @@ export type VatType = typeof VatType.Type
 // --- Numeric helpers ---
 
 // Money (finite number, 2 decimal places conceptually)
-export const Money = Schema.Number.pipe(Schema.finite)
+export const Money = Schema.Number.pipe(Schema.finite())
 export type Money = typeof Money.Type
 
 // Positive integer
@@ -61,12 +61,12 @@ export const PositiveInt = Schema.Number.pipe(Schema.int(), Schema.positive())
 export type PositiveInt = typeof PositiveInt.Type
 
 // Non-negative number
-export const NonNegative = Schema.Number.pipe(Schema.finite, Schema.nonNegative())
+export const NonNegative = Schema.Number.pipe(Schema.finite(), Schema.nonNegative())
 export type NonNegative = typeof NonNegative.Type
 
 // Percentage (0-100)
 export const Percentage = Schema.Number.pipe(
-  Schema.finite,
+  Schema.finite(),
   Schema.greaterThanOrEqualTo(0),
   Schema.lessThanOrEqualTo(100)
 )
