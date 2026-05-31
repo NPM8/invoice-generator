@@ -33,3 +33,7 @@ supabase/.temp/
 
 # Temp files
 *.tmp
+tmp/
+
+# Template-builder scratch output (/build-invoice-template)
+invoice-sample.pdf
