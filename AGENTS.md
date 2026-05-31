@@ -9,6 +9,12 @@ Last reviewed: 2026-05-31 (typecheck clean + e2e passing end-to-end — see §6)
 
 ---
 
+## 0. API docs
+
+- `API.md` — endpoint reference for callers (auth, routes, payload/response shapes, errors).
+- `openapi.json` — machine-readable spec, generated from the `HttpApi` via `bun run generate-openapi`.
+- **After changing any endpoint/schema, regenerate `openapi.json` and update `API.md`.**
+
 ## 1. What this is
 
 PDF invoicing service running on **Cloudflare Workers**. Two deployables:

@@ -14,7 +14,8 @@
     "test:e2e": "bun test tests/e2e",
     "test:coverage": "bun test --coverage",
     "seed": "bun run src/scripts/seed.ts",
-    "generate-key": "bun run src/scripts/generate-api-key.ts"
+    "generate-key": "bun run src/scripts/generate-api-key.ts",
+    "generate-openapi": "bun run src/scripts/generate-openapi.ts"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20241127.0",
