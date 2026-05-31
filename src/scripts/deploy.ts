@@ -26,8 +26,8 @@ const ACCOUNT = env.CLOUDFLARE_ACCOUNT_ID!
 const baseEnv = { ...process.env, CLOUDFLARE_ACCOUNT_ID: ACCOUNT } as Record<string, string>
 
 /** Run a command, streaming output. Optionally feed `input` to stdin. */
-async function sh(cmd: string[], opts: { input?: string; allowFail?: boolean } = {}): Promise<number> {
-    console.log(`\n$ ${cmd.join(" ")}`)
+async function sh(cmd: string[], opts: { input?: string; allowFail?: boolean; display?: string } = {}): Promise<number> {
+    console.log(`\n$ ${opts.display ?? cmd.join(" ")}`)
     const proc = Bun.spawn(cmd, {
         stdin: opts.input != null ? Buffer.from(opts.input) : "inherit",
         stdout: "inherit",
@@ -48,10 +48,19 @@ await sh(["bunx", "wrangler", "r2", "bucket", "create", "invoices"], { allowFail
 await sh(["bunx", "wrangler", "queues", "create", "invoice-processing"], { allowFail: true })
 await sh(["bunx", "wrangler", "queues", "create", "invoice-processing-dlq"], { allowFail: true })
 
-// 2. Migrations over a direct Postgres connection (no access token / link needed).
+// 2. Migrations over a Postgres connection. Direct (db.<ref>.supabase.co) is
+// IPv6-only; on IPv4 networks set SUPABASE_DB_URL to the pooler URI (Supabase
+// dashboard -> Settings -> Database -> Connection string -> Session pooler).
 console.log("\n=== Database migrations ===")
-const dbUrl = `postgresql://postgres:${encodeURIComponent(env.SUPABASE_DB_PASSWORD!)}@db.${env.SUPABASE_PROJECT_REF}.supabase.co:5432/postgres`
-await sh(["bunx", "supabase", "db", "push", "--db-url", dbUrl])
+if (env.SKIP_MIGRATIONS) {
+    console.log("SKIP_MIGRATIONS set — skipping (migrations applied out of band).")
+} else {
+    const dbUrl = env.SUPABASE_DB_URL
+        || `postgresql://postgres:${encodeURIComponent(env.SUPABASE_DB_PASSWORD!)}@db.${env.SUPABASE_PROJECT_REF}.supabase.co:5432/postgres`
+    await sh(["bunx", "supabase", "db", "push", "--db-url", dbUrl], {
+        display: "bunx supabase db push --db-url <hidden>",
+    })
+}
 
 // 3. Secrets (piped via stdin so values never appear in argv).
 console.log("\n=== Secrets ===")
