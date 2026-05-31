@@ -37,6 +37,7 @@ tmp/
 
 # Template-builder scratch output (/build-invoice-template)
 invoice-sample.pdf
+prod-invoice.pdf
 
 # Deploy secrets
 .env.deploy

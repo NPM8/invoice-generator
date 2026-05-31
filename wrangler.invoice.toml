@@ -8,9 +8,12 @@ LOG_LEVEL = "info"
 NODE_ENV = "production"
 
 # react-pdf's default (Node) build's renderToBuffer throws on workerd; use the
-# browser build (pdf().toBlob()) which runs on the Workers runtime.
+# browser build (pdf().toBlob()). And swap yoga's runtime-WASM loader for one
+# that instantiates a statically-imported (precompiled) module — workerd forbids
+# instantiating WASM from bytes at runtime.
 [alias]
 "@react-pdf/renderer" = "@react-pdf/renderer/lib/react-pdf.browser.js"
+"yoga-layout/load" = "./src/invoice-worker/yoga-workerd.ts"
 
 # Secrets (set via `wrangler secret put`):
 # SUPABASE_URL

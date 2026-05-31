@@ -1,5 +1,6 @@
 import { Effect } from "effect"
 import { InvoiceService } from "../../shared/services/invoice.js"
+import { OrganizationService } from "../../shared/services/organization.js"
 import { TemplateService } from "../../shared/services/template.js"
 import { StorageService } from "../../shared/services/storage.js"
 import { QueueService } from "../../shared/services/queue.js"
@@ -11,6 +12,7 @@ import type { InvoicePropsType } from "../../templates/types.js"
 export const handlePdfGeneration = (invoiceId: string) =>
     Effect.gen(function* () {
         const invoiceService = yield* InvoiceService
+        const orgService = yield* OrganizationService
         const templateService = yield* TemplateService
         const storageService = yield* StorageService
         const queueService = yield* QueueService
@@ -20,6 +22,9 @@ export const handlePdfGeneration = (invoiceId: string) =>
         yield* invoiceService.updateStatus(invoiceId, "processing")
 
         const { invoice, items } = yield* invoiceService.findById(invoiceId)
+
+        // Org branding (logo, bank details) for the template.
+        const org = yield* orgService.findById(invoice.orgId)
 
         const template = yield* templateService.findById(invoice.templateId!)
 
@@ -64,15 +69,21 @@ export const handlePdfGeneration = (invoiceId: string) =>
             issueDate: invoice.issueDate,
             dueDate: invoice.dueDate,
 
+            logoUrl: org.logoUrl,
+            bankName: org.bankName,
+            bankIban: org.bankIban,
+            bankSwift: org.bankSwift,
+            bankAccountNumber: org.bankAccountNumber,
+
             notes: invoice.notes,
             terms: invoice.terms,
             metadata: invoice.metadata,
 
             helpers: {
                 formatCurrency: (amount: number, currencyCode: string = invoice.currency) =>
-                    new Intl.NumberFormat("en-US", { style: "currency", currency: currencyCode }).format(amount),
+                    new Intl.NumberFormat("sk-SK", { style: "currency", currency: currencyCode }).format(amount),
                 formatDate: (dateString: string) =>
-                    new Date(dateString).toLocaleDateString(),
+                    new Date(dateString).toLocaleDateString("sk-SK"),
             }
         }
 
