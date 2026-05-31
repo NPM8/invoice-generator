@@ -48,6 +48,7 @@ const styles = StyleSheet.create({
     grandValue: { fontWeight: "bold", fontSize: 13, color: CRIMSON },
 
     notice: { marginTop: 18, fontSize: 9, color: CRIMSON },
+    paidBadge: { marginTop: 16, padding: 8, borderWidth: 1, borderColor: "#1a7f37", borderRadius: 3, color: "#1a7f37", fontWeight: "bold" },
     section: { marginTop: 22 },
     sectionBody: { color: MUTED, fontSize: 9, marginTop: 3 },
 
@@ -60,9 +61,16 @@ export default function BekimMinimal({
     buyerName, buyerAddress, buyerTaxId,
     currency, subtotal, totalVat, total, items, isReverseCharge,
     logoUrl, bankName, bankIban, bankSwift,
+    paymentStatus, paymentMethod, paidAt, cardLast4,
     notes, terms,
     helpers: { formatCurrency, formatDate },
 }: InvoicePropsType) {
+    const paid = paymentStatus === "paid"
+    const methodLabel =
+        paymentMethod === "card" ? "kartou"
+            : paymentMethod === "bank_transfer" ? "prevodom"
+                : paymentMethod === "cash" ? "v hotovosti"
+                    : ""
     return (
         <Document>
             <Page size="A4" style={styles.page}>
@@ -127,7 +135,14 @@ export default function BekimMinimal({
                     <Text style={styles.notice}>Prenesenie daňovej povinnosti — DPH odvedie príjemca.</Text>
                 ) : null}
 
-                {(bankIban || bankName) ? (
+                {paid ? (
+                    // Recorded as paid (e.g. by card at checkout) — show that instead of bank details.
+                    <Text style={styles.paidBadge}>
+                        ✓ Zaplatené{methodLabel ? ` ${methodLabel}` : ""}
+                        {cardLast4 ? ` •••• ${cardLast4}` : ""}
+                        {paidAt ? ` · ${formatDate(paidAt)}` : ""}
+                    </Text>
+                ) : (bankIban || bankName) ? (
                     <View style={styles.section}>
                         <Text style={styles.label}>Platobné údaje</Text>
                         <Text style={styles.sectionBody}>

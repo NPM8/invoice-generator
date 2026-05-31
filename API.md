@@ -73,6 +73,12 @@ Request (`CreateInvoice`):
   ],
   "issueDate": "2026-01-15",                      // YYYY-MM-DD
   "dueDate": "2026-02-15",
+  // Payment — record how it was paid (e.g. card at checkout in your app).
+  // Shown on the invoice instead of bank-transfer details. No payment is processed here.
+  "paymentStatus": "paid",                         // optional: 'paid'|'unpaid' (default 'unpaid')
+  "paymentMethod": "card",                         // optional: 'card'|'bank_transfer'|'cash'|'other'
+  "paidAt": "2026-01-15T10:30:00Z",                // optional
+  "cardLast4": "4242",                             // optional, 4 digits
   "callbackUrl": "https://... (optional)",
   "notes": "optional",
   "terms": "optional",
@@ -103,6 +109,7 @@ buyerName, buyerAddress, buyerTaxId, buyerTaxIdType, buyerCountryCode, buyerEmai
 currency, subtotal, totalVat, total,
 vatSummary: [{ vatRate, vatType, netAmount, vatAmount, grossAmount }],
 isReverseCharge, issueDate, dueDate,
+paymentStatus ('paid'|'unpaid'), paymentMethod, paidAt, cardLast4,
 pdfUrl, pdfGeneratedAt,
 callbackUrl, callbackStatus, callbackAttempts, callbackLastAttemptAt,
 notes, terms, metadata, createdAt, updatedAt

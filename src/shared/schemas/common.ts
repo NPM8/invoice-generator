@@ -50,6 +50,14 @@ export type CallbackStatus = typeof CallbackStatus.Type
 export const VatType = Schema.Literal("standard", "reverse_charge", "zero_rated", "exempt")
 export type VatType = typeof VatType.Type
 
+// How the invoice was/should be paid
+export const PaymentMethod = Schema.Literal("card", "bank_transfer", "cash", "other")
+export type PaymentMethod = typeof PaymentMethod.Type
+
+// Whether the invoice has been paid
+export const PaymentStatus = Schema.Literal("paid", "unpaid")
+export type PaymentStatus = typeof PaymentStatus.Type
+
 // --- Numeric helpers ---
 
 // Money (finite number, 2 decimal places conceptually)

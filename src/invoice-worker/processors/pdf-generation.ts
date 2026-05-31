@@ -69,6 +69,11 @@ export const handlePdfGeneration = (invoiceId: string) =>
             issueDate: invoice.issueDate,
             dueDate: invoice.dueDate,
 
+            paymentStatus: invoice.paymentStatus,
+            paymentMethod: invoice.paymentMethod,
+            paidAt: invoice.paidAt,
+            cardLast4: invoice.cardLast4,
+
             logoUrl: org.logoUrl,
             bankName: org.bankName,
             bankIban: org.bankIban,

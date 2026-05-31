@@ -80,7 +80,172 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/CreateInvoice"
+                "type": "object",
+                "required": [
+                  "buyerName",
+                  "buyerCountryCode",
+                  "currency",
+                  "items",
+                  "issueDate",
+                  "dueDate"
+                ],
+                "properties": {
+                  "templateId": {
+                    "type": "string",
+                    "description": "a Universally Unique Identifier",
+                    "format": "uuid",
+                    "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+                  },
+                  "buyerName": {
+                    "type": "string",
+                    "description": "a string at least 1 character(s) long",
+                    "title": "minLength(1)",
+                    "minLength": 1
+                  },
+                  "buyerAddress": {
+                    "type": "string"
+                  },
+                  "buyerTaxId": {
+                    "type": "string"
+                  },
+                  "buyerTaxIdType": {
+                    "type": "string",
+                    "enum": [
+                      "eu_vat",
+                      "us_ein",
+                      "gb_vat",
+                      "au_abn",
+                      "other"
+                    ]
+                  },
+                  "buyerCountryCode": {
+                    "type": "string",
+                    "description": "a string matching the pattern ^[A-Z]{2}$",
+                    "pattern": "^[A-Z]{2}$"
+                  },
+                  "buyerEmail": {
+                    "type": "string",
+                    "description": "a string matching the pattern ^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$",
+                    "pattern": "^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$"
+                  },
+                  "currency": {
+                    "type": "string",
+                    "description": "a string matching the pattern ^[A-Z]{3}$",
+                    "pattern": "^[A-Z]{3}$"
+                  },
+                  "items": {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                      "type": "object",
+                      "required": [
+                        "position",
+                        "description",
+                        "quantity",
+                        "unitPrice",
+                        "vatRate"
+                      ],
+                      "properties": {
+                        "position": {
+                          "type": "integer",
+                          "description": "a positive number",
+                          "title": "positive",
+                          "exclusiveMinimum": 0
+                        },
+                        "description": {
+                          "type": "string",
+                          "description": "a string at least 1 character(s) long",
+                          "title": "minLength(1)",
+                          "minLength": 1
+                        },
+                        "quantity": {
+                          "type": "number",
+                          "description": "a non-negative number",
+                          "title": "nonNegative",
+                          "minimum": 0
+                        },
+                        "unit": {
+                          "type": "string"
+                        },
+                        "unitPrice": {
+                          "type": "number",
+                          "description": "a finite number",
+                          "title": "finite"
+                        },
+                        "discountPercent": {
+                          "type": "number",
+                          "description": "a number less than or equal to 100",
+                          "title": "lessThanOrEqualTo(100)",
+                          "minimum": 0,
+                          "maximum": 100
+                        },
+                        "vatRate": {
+                          "type": "number",
+                          "description": "a number less than or equal to 100",
+                          "title": "lessThanOrEqualTo(100)",
+                          "minimum": 0,
+                          "maximum": 100
+                        },
+                        "vatType": {
+                          "type": "string",
+                          "enum": [
+                            "standard",
+                            "reverse_charge",
+                            "zero_rated",
+                            "exempt"
+                          ]
+                        }
+                      },
+                      "additionalProperties": false
+                    }
+                  },
+                  "issueDate": {
+                    "type": "string"
+                  },
+                  "dueDate": {
+                    "type": "string"
+                  },
+                  "paymentStatus": {
+                    "type": "string",
+                    "enum": [
+                      "paid",
+                      "unpaid"
+                    ]
+                  },
+                  "paymentMethod": {
+                    "type": "string",
+                    "enum": [
+                      "card",
+                      "bank_transfer",
+                      "cash",
+                      "other"
+                    ]
+                  },
+                  "paidAt": {
+                    "type": "string"
+                  },
+                  "cardLast4": {
+                    "type": "string",
+                    "description": "a string matching the pattern ^[0-9]{4}$",
+                    "pattern": "^[0-9]{4}$"
+                  },
+                  "callbackUrl": {
+                    "type": "string",
+                    "description": "a string matching the pattern ^https?:\\/\\/.+",
+                    "pattern": "^https?:\\/\\/.+"
+                  },
+                  "notes": {
+                    "type": "string"
+                  },
+                  "terms": {
+                    "type": "string"
+                  },
+                  "metadata": {
+                    "$id": "/schemas/unknown",
+                    "title": "unknown"
+                  }
+                },
+                "additionalProperties": false
               }
             }
           },
@@ -1612,150 +1777,6 @@
   },
   "components": {
     "schemas": {
-      "CreateInvoice": {
-        "type": "object",
-        "required": [
-          "buyerName",
-          "buyerCountryCode",
-          "currency",
-          "items",
-          "issueDate",
-          "dueDate"
-        ],
-        "properties": {
-          "templateId": {
-            "type": "string",
-            "description": "a Universally Unique Identifier",
-            "format": "uuid",
-            "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
-          },
-          "buyerName": {
-            "type": "string",
-            "description": "a string at least 1 character(s) long",
-            "title": "minLength(1)",
-            "minLength": 1
-          },
-          "buyerAddress": {
-            "type": "string"
-          },
-          "buyerTaxId": {
-            "type": "string"
-          },
-          "buyerTaxIdType": {
-            "type": "string",
-            "enum": [
-              "eu_vat",
-              "us_ein",
-              "gb_vat",
-              "au_abn",
-              "other"
-            ]
-          },
-          "buyerCountryCode": {
-            "type": "string",
-            "description": "a string matching the pattern ^[A-Z]{2}$",
-            "pattern": "^[A-Z]{2}$"
-          },
-          "buyerEmail": {
-            "type": "string",
-            "description": "a string matching the pattern ^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$",
-            "pattern": "^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$"
-          },
-          "currency": {
-            "type": "string",
-            "description": "a string matching the pattern ^[A-Z]{3}$",
-            "pattern": "^[A-Z]{3}$"
-          },
-          "items": {
-            "type": "array",
-            "minItems": 1,
-            "items": {
-              "type": "object",
-              "required": [
-                "position",
-                "description",
-                "quantity",
-                "unitPrice",
-                "vatRate"
-              ],
-              "properties": {
-                "position": {
-                  "type": "integer",
-                  "description": "a positive number",
-                  "title": "positive",
-                  "exclusiveMinimum": 0
-                },
-                "description": {
-                  "type": "string",
-                  "description": "a string at least 1 character(s) long",
-                  "title": "minLength(1)",
-                  "minLength": 1
-                },
-                "quantity": {
-                  "type": "number",
-                  "description": "a non-negative number",
-                  "title": "nonNegative",
-                  "minimum": 0
-                },
-                "unit": {
-                  "type": "string"
-                },
-                "unitPrice": {
-                  "type": "number",
-                  "description": "a finite number",
-                  "title": "finite"
-                },
-                "discountPercent": {
-                  "type": "number",
-                  "description": "a number less than or equal to 100",
-                  "title": "lessThanOrEqualTo(100)",
-                  "minimum": 0,
-                  "maximum": 100
-                },
-                "vatRate": {
-                  "type": "number",
-                  "description": "a number less than or equal to 100",
-                  "title": "lessThanOrEqualTo(100)",
-                  "minimum": 0,
-                  "maximum": 100
-                },
-                "vatType": {
-                  "type": "string",
-                  "enum": [
-                    "standard",
-                    "reverse_charge",
-                    "zero_rated",
-                    "exempt"
-                  ]
-                }
-              },
-              "additionalProperties": false
-            }
-          },
-          "issueDate": {
-            "type": "string"
-          },
-          "dueDate": {
-            "type": "string"
-          },
-          "callbackUrl": {
-            "type": "string",
-            "description": "a string matching the pattern ^https?:\\/\\/.+",
-            "pattern": "^https?:\\/\\/.+"
-          },
-          "notes": {
-            "type": "string"
-          },
-          "terms": {
-            "type": "string"
-          },
-          "metadata": {
-            "$id": "/schemas/unknown",
-            "title": "unknown"
-          }
-        },
-        "additionalProperties": false
-      },
       "Invoice": {
         "type": "object",
         "required": [
@@ -1785,6 +1806,10 @@
           "dueDate",
           "pdfUrl",
           "pdfGeneratedAt",
+          "paymentStatus",
+          "paymentMethod",
+          "paidAt",
+          "cardLast4",
           "callbackUrl",
           "callbackStatus",
           "callbackAttempts",
@@ -2012,6 +2037,49 @@
             ]
           },
           "pdfGeneratedAt": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "paymentStatus": {
+            "type": "string",
+            "enum": [
+              "paid",
+              "unpaid"
+            ]
+          },
+          "paymentMethod": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "card",
+                  "bank_transfer",
+                  "cash",
+                  "other"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "paidAt": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "cardLast4": {
             "anyOf": [
               {
                 "type": "string"

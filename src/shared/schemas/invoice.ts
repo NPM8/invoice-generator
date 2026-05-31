@@ -7,6 +7,8 @@ import {
   InvoiceStatus,
   CallbackStatus,
   VatType,
+  PaymentMethod,
+  PaymentStatus,
   Email,
   Url,
   Money,
@@ -89,6 +91,11 @@ export class Invoice extends Schema.Class<Invoice>("Invoice")({
   // PDF
   pdfUrl: Schema.NullOr(Schema.String),
   pdfGeneratedAt: Schema.NullOr(Schema.String),
+  // Payment
+  paymentStatus: PaymentStatus,
+  paymentMethod: Schema.NullOr(PaymentMethod),
+  paidAt: Schema.NullOr(Schema.String),
+  cardLast4: Schema.NullOr(Schema.String),
   // Callback
   callbackUrl: Schema.NullOr(Url),
   callbackStatus: CallbackStatus,
@@ -119,6 +126,11 @@ export class CreateInvoice extends Schema.Class<CreateInvoice>("CreateInvoice")(
   // Dates
   issueDate: Schema.String,
   dueDate: Schema.String,
+  // Payment (e.g. already paid by card at checkout in the calling app)
+  paymentStatus: Schema.optionalWith(PaymentStatus, { default: () => "unpaid" as const }),
+  paymentMethod: Schema.optional(PaymentMethod),
+  paidAt: Schema.optional(Schema.String),
+  cardLast4: Schema.optional(Schema.String.pipe(Schema.pattern(/^[0-9]{4}$/))),
   // Optional
   callbackUrl: Schema.optional(Url),
   notes: Schema.optional(Schema.String),

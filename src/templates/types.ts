@@ -50,6 +50,12 @@ export interface InvoicePropsType {
     issueDate: string
     dueDate: string
 
+    // Payment (recorded — e.g. paid by card at checkout in the calling app)
+    paymentStatus: string // "paid" | "unpaid"
+    paymentMethod?: string | null // "card" | "bank_transfer" | "cash" | "other"
+    paidAt?: string | null
+    cardLast4?: string | null
+
     // Org branding & payment info
     logoUrl?: string | null
     bankName?: string | null
