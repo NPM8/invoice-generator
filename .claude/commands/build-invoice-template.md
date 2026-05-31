@@ -10,14 +10,17 @@ service. Target company site: **$ARGUMENTS**
 Read these first so you follow the real contracts (do not skip):
 - `src/templates/types.ts` — `InvoicePropsType` (the exact data + `helpers` a template receives).
 - `src/templates/registry.ts` — how templates are selected by name.
-- `src/templates/components/default-invoice.tsx` and `minimal-invoice.tsx` — examples.
+- `src/templates/components/bekim-minimal.tsx` — the canonical reference (font, logo, payment badge).
+  `default-invoice.tsx` / `minimal-invoice.tsx` — other examples.
 - `API.md` (Templates section) and `AGENTS.md` (Templates section).
 
 Hard rules (react-pdf on Workers):
 - A template is a React component: **default export**, takes `InvoicePropsType`, returns a react-pdf `<Document>`.
 - Primitives only: `Document, Page, View, Text, Image, StyleSheet, Link`. No HTML.
 - **Numeric borders use `*Width`** (`borderWidth`, `borderBottomWidth`) — `border: 1` crashes render.
-- `"Helvetica"` is built-in (with `fontWeight: "bold"`). Don't `Font.register` unless you ship a real font `src`.
+- **Fonts:** `"Helvetica"` is built-in but ASCII-only. For diacritics (Slovak/Czech/Polish etc.) use the
+  embedded Unicode font: `import { UNICODE_FONT, registerUnicodeFont } from "../fonts.js"`, call
+  `registerUnicodeFont()` at module top, set `fontFamily: UNICODE_FONT`. Don't `Font.register` other CDN fonts.
 - No Node/browser-only globals (no `URL.createObjectURL`, no `fs`).
 - Use the provided `helpers.formatCurrency` / `helpers.formatDate` for all money/dates.
 
@@ -68,6 +71,11 @@ output differs, but layout/colors/hierarchy should match. Make the three meaning
    `src/templates/components/<key>.tsx` as a real react-pdf component implementing the chosen
    option (translate the HTML mock to react-pdf primitives + `StyleSheet`). Use the logo via
    `<Image src={logoUrl} />` guarded by `logoUrl` (it's an optional prop).
+   - **Payment badge (required):** read `paymentStatus`/`paymentMethod`/`paidAt`/`cardLast4`. When
+     `paymentStatus === "paid"`, show a paid badge **instead of** bank details — e.g.
+     `✓ Paid {by card ••••4242} {· date}` (method label from `paymentMethod`, last-4 from `cardLast4`,
+     date via `helpers.formatDate(paidAt)`). When unpaid, show bank-transfer details
+     (`bankName`/`bankIban`/`bankSwift`). Mirror `bekim-minimal.tsx`.
 2. Register it in `src/templates/registry.ts`: import + add `"<key>": <Component>` to
    `BUNDLED_TEMPLATES`.
 3. Add a test mirroring the existing pattern in `tests/e2e/invoice-flow.test.ts`
@@ -101,6 +109,8 @@ const sample = {
     { position: 2, description: "Brand assets", quantity: 1, unit: "pcs", unitPrice: 200, discountPercent: 0, vatRate: 19, vatAmount: 38, netAmount: 200, grossAmount: 238 },
   ],
   issueDate: "2026-01-15", dueDate: "2026-02-15",
+  // Payment — flip paymentStatus to "unpaid" to preview the bank-details branch instead of the paid badge.
+  paymentStatus: "paid", paymentMethod: "card", paidAt: "2026-01-15T10:30:00Z", cardLast4: "4242",
   logoUrl: null, bankName: "N26", bankIban: "DE89370400440532013000", bankSwift: "NTSBDEB1", bankAccountNumber: null,
   notes: "Thanks for your business.", terms: "Net 30.", metadata: {},
   helpers: {
