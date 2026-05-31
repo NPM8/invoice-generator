@@ -17,7 +17,7 @@ export const BUNDLED_TEMPLATES: Record<string, ComponentType<InvoicePropsType>> 
     "bekim-minimal": BekimMinimal,
 }
 
-/** Resolve a template row's component by name; unknown names fall back to the default. */
+/** Resolve a template row's component by name; unknown names fall back to bekim-minimal (the default design). */
 export function resolveTemplateComponent(name: string): ComponentType<InvoicePropsType> {
-    return BUNDLED_TEMPLATES[name] ?? DefaultInvoice
+    return BUNDLED_TEMPLATES[name] ?? BekimMinimal
 }
