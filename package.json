@@ -16,7 +16,8 @@
     "seed": "bun run src/scripts/seed.ts",
     "generate-key": "bun run src/scripts/generate-api-key.ts",
     "generate-openapi": "bun run src/scripts/generate-openapi.ts",
-    "generate-fonts": "bun run src/scripts/generate-fonts.ts"
+    "generate-fonts": "bun run src/scripts/generate-fonts.ts",
+    "deploy:all": "bun --env-file=.env.deploy run src/scripts/deploy.ts"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20241127.0",

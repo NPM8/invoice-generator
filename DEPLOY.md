@@ -6,6 +6,21 @@ Two Cloudflare Workers:
 
 Other apps integrate by calling the API worker over HTTPS with `x-api-key`.
 
+## Automated (recommended)
+
+```bash
+cp .env.deploy.example .env.deploy   # fill in (gitignored — holds secrets)
+bunx wrangler login                  # or set CLOUDFLARE_API_TOKEN in .env.deploy
+bun run deploy:all
+```
+`deploy:all` (`src/scripts/deploy.ts`) creates the R2 bucket + queues, applies
+migrations (`supabase db push` over a direct DB connection), sets the wrangler
+secrets (piped via stdin — never in argv), deploys both workers, and bootstraps
+an admin org + API key — **printed once at the end**. Idempotent; safe to re-run.
+Prereqs below (Workers Paid plan, hosted Supabase) still apply.
+
+The manual steps below document what the script does.
+
 ## Prerequisites
 - Cloudflare account; `bunx wrangler login`.
 - **Workers Paid plan** ($5/mo) — Cloudflare Queues require it. Enable **R2** in the dashboard.
