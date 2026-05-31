@@ -167,7 +167,10 @@ Secrets via `wrangler secret put`: `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`,
 7. `api-worker/index.ts`: merge `HttpServer.layerContext` for `DefaultServices`; `HttpMiddleware.cors()` (called).
 
 ### Suggested next steps (priority)
-1. (Optional) per-tenant arbitrary-code templates — needs a build-time/bundling step; bundled registry
+1. **TODO: multi-language / i18n.** Currently dates/currency are formatted `sk-SK` and template labels are
+   hard-coded Slovak (`bekim-minimal`). Add a `locale` (per-invoice, overriding an org default), pass it into
+   the `Intl` formatters, and move template labels into per-locale dictionaries. (Parked by request.)
+2. (Optional) per-tenant arbitrary-code templates — needs a build-time/bundling step; bundled registry
    (`src/templates/registry.ts`) covers fixed designs today.
 2. Update README. First real deploy against a CF account.
 
