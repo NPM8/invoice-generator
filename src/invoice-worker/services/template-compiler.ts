@@ -2,7 +2,6 @@ import { Context, Effect, Layer } from "effect"
 import { PdfRenderError } from "../../shared/errors/index.js"
 import type { InvoicePropsType } from "../../templates/types.js"
 import React from "react"
-import * as esbuild from "esbuild"
 
 export class TemplateCompilerService extends Context.Tag("TemplateCompilerService")<
     TemplateCompilerService,
@@ -19,6 +18,9 @@ export class TemplateCompilerService extends Context.Tag("TemplateCompilerServic
 const cache = new Map<string, React.ComponentType<InvoicePropsType>>()
 
 export const compileTemplateCode = async (sourceCode: string): Promise<string> => {
+    // Lazy import: esbuild cannot initialize on the Workers runtime. Deferring keeps
+    // any worker that references this module bootable.
+    const esbuild = await import("esbuild")
     const result = await esbuild.transform(sourceCode, {
         loader: "tsx",
         format: "esm",

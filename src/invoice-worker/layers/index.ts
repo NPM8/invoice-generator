@@ -15,7 +15,6 @@ import { CallbackServiceLive } from "../../shared/services/callback.js"
 
 // Worker specific
 import { PdfServiceLive } from "../services/pdf.js"
-import { TemplateCompilerServiceLive } from "../services/template-compiler.js"
 
 import type { Env } from "../../shared/types/env.js"
 
@@ -40,7 +39,6 @@ export const makeWorkerLayer = (env: Env) => {
         InvoiceServiceLive,
         CallbackServiceLive,
         PdfServiceLive,
-        TemplateCompilerServiceLive
     ).pipe(
         Layer.provideMerge(Layer.mergeAll(OrganizationServiceLive, TemplateServiceLive))
     )
