@@ -2,6 +2,7 @@ import type { ComponentType } from "react"
 import type { InvoicePropsType } from "./types.js"
 import DefaultInvoice from "./components/default-invoice.js"
 import MinimalInvoice from "./components/minimal-invoice.js"
+import BekimMinimal from "./components/bekim-minimal.js"
 
 // Bundled PDF templates, keyed by the invoice_templates.name used to select them.
 // These are compiled into the worker bundle (no runtime TSX compilation, which
@@ -13,6 +14,7 @@ import MinimalInvoice from "./components/minimal-invoice.js"
 export const BUNDLED_TEMPLATES: Record<string, ComponentType<InvoicePropsType>> = {
     "default-invoice": DefaultInvoice,
     "minimal": MinimalInvoice,
+    "bekim-minimal": BekimMinimal,
 }
 
 /** Resolve a template row's component by name; unknown names fall back to the default. */

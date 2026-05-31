@@ -262,5 +262,42 @@ describe.skipIf(!pf.available)(
             const buf = await dl.arrayBuffer()
             expect(new Uint8Array(buf.slice(0, 4))).toEqual(new Uint8Array([0x25, 0x50, 0x44, 0x46]))
         }, 30_000)
+
+        it("renders the bekim-minimal (Slovak) template", async () => {
+            const createRes = await fetch(`${config.baseUrl}/api/v1/invoices`, {
+                method: "POST",
+                headers: { "content-type": "application/json", "x-api-key": fx.orgKey },
+                body: JSON.stringify({
+                    templateId: fx.bekimTemplateId,
+                    buyerName: "Tatra Sport s.r.o.",
+                    buyerAddress: "Mlynská 5, 811 01 Bratislava, SK",
+                    buyerCountryCode: "SK",
+                    currency: "EUR",
+                    issueDate: "2026-01-15",
+                    dueDate: "2026-02-14",
+                    items: [
+                        { position: 1, description: "Sponzoring — Gold 2026", quantity: 1, unitPrice: 2000, vatRate: 20 },
+                    ],
+                }),
+            })
+            expect(createRes.status).toBe(200)
+            const inv = await createRes.json() as any
+            expect(inv.templateId).toBe(fx.bekimTemplateId)
+            const bekimInvoiceId: string = inv.id
+
+            const { batch, acked } = makeQueueBatch([{ type: "pdf-generation", invoiceId: bekimInvoiceId }])
+            await invoiceWorker.queue(batch, workerEnv, makeCtx())
+            expect(acked).toEqual([0])
+
+            const api = makeApiHandler(workerEnv)
+            const dl = await api(
+                new Request(`http://e2e/api/v1/invoices/${bekimInvoiceId}/pdf/download`, {
+                    headers: { "x-api-key": fx.orgKey },
+                }),
+            )
+            expect(dl.status).toBe(200)
+            const buf = await dl.arrayBuffer()
+            expect(new Uint8Array(buf.slice(0, 4))).toEqual(new Uint8Array([0x25, 0x50, 0x44, 0x46]))
+        }, 30_000)
     },
 )
