@@ -1,0 +1,27 @@
+name = "invoicing-api"
+main = "src/api-worker/index.ts"
+compatibility_date = "2024-09-23"
+compatibility_flags = ["nodejs_compat"]
+
+[vars]
+LOG_LEVEL = "info"
+NODE_ENV = "production"
+
+# Secrets (set via `wrangler secret put`):
+# SUPABASE_URL
+# SUPABASE_SERVICE_ROLE_KEY
+# ADMIN_API_KEY
+
+[[r2_buckets]]
+binding = "INVOICES_BUCKET"
+bucket_name = "invoices"
+
+[[queues.producers]]
+binding = "INVOICE_QUEUE"
+queue = "invoice-processing"
+
+[build]
+command = ""
+
+[build.upload]
+format = "modules"

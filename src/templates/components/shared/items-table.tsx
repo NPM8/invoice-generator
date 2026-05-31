@@ -3,8 +3,8 @@ import { View, Text, StyleSheet } from "@react-pdf/renderer"
 
 const styles = StyleSheet.create({
     table: { width: "100%", marginBottom: 30 },
-    tableHeader: { flexDirection: "row", backgroundColor: "#f9f9f9", padding: 8, borderBottom: 1, borderBottomColor: "#ddd", fontWeight: "bold" },
-    tableRow: { flexDirection: "row", padding: 8, borderBottom: 1, borderBottomColor: "#eee" },
+    tableHeader: { flexDirection: "row", backgroundColor: "#f9f9f9", padding: 8, borderBottomWidth: 1, borderBottomColor: "#ddd", fontWeight: "bold" },
+    tableRow: { flexDirection: "row", padding: 8, borderBottomWidth: 1, borderBottomColor: "#eee" },
     colPos: { width: "5%" },
     colDesc: { width: "35%" },
     colQty: { width: "10%", textAlign: "right" },

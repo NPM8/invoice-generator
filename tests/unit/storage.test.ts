@@ -1,90 +1,95 @@
 import { describe, it, expect } from "bun:test"
 import { Effect, Layer, Either } from "effect"
-import { StorageService, StorageServiceLive } from "../../src/shared/services/storage.js"
-import { ConfigService, AppConfig } from "../../src/shared/config/index.js"
+import { StorageService, makeStorageService } from "../../src/shared/services/storage.js"
 import { StorageError } from "../../src/shared/errors/index.js"
 
-const createMockConfig = (provider: AppConfig["storageProvider"]): typeof ConfigService.Service => ({
-    supabaseUrl: "http://localhost:54321",
-    supabaseServiceRoleKey: "key",
-    supabaseAnonKey: "anon",
-    redisUrl: "redis",
-    apiPort: 3000,
-    logLevel: "info",
-    nodeEnv: "test",
-    storageProvider: provider,
-    r2AccountId: "acc",
-    r2AccessKeyId: "r2-key",
-    r2SecretAccessKey: "r2-secret",
-    r2BucketName: "r2-bucket"
-})
+const createMockR2Bucket = (opts?: { shouldFail?: boolean }): R2Bucket => ({
+    put: async (_key: string, _value: any) => {
+        if (opts?.shouldFail) throw new Error("R2 put failed")
+        return {} as any
+    },
+    get: async () => null,
+    delete: async () => {},
+    list: async () => ({ objects: [], truncated: false, delimitedPrefixes: [] }) as any,
+    head: async () => null,
+    createMultipartUpload: async () => ({} as any),
+    resumeMultipartUpload: () => ({} as any),
+}) as unknown as R2Bucket
 
-describe("StorageService (Supabase)", () => {
-    const MockConfig = Layer.succeed(ConfigService, createMockConfig("supabase"))
-    const TestLayer = StorageServiceLive.pipe(Layer.provide(MockConfig))
+describe("StorageService (R2 binding)", () => {
+    it("uploads a PDF via R2 binding successfully", async () => {
+        const mockBucket = createMockR2Bucket()
+        const TestLayer = makeStorageService(mockBucket)
 
-    it("initializes and handles uploadPdf errors", async () => {
         const program = Effect.gen(function* () {
             const service = yield* StorageService
-            const result = yield* Effect.either(service.uploadPdf("test.pdf", Buffer.from("test")))
-
-            expect(Either.isLeft(result)).toBe(true)
-            if (Either.isLeft(result)) {
-                expect(result.left).toBeInstanceOf(StorageError)
-                expect(result.left.message).toBe("Failed to upload PDF")
-            }
+            const result = yield* Effect.either(service.uploadPdf("test.pdf", new Uint8Array([1, 2, 3])))
+            expect(Either.isRight(result)).toBe(true)
         })
+
         await Effect.runPromise(Effect.provide(program, TestLayer))
     })
 
-    it("initializes and handles getSignedUrl errors", async () => {
+    it("handles R2 upload errors", async () => {
+        const mockBucket = createMockR2Bucket({ shouldFail: true })
+        const TestLayer = makeStorageService(mockBucket)
+
         const program = Effect.gen(function* () {
             const service = yield* StorageService
-            const result = yield* Effect.either(service.getSignedUrl("test.pdf"))
-
-            expect(Either.isLeft(result)).toBe(true)
-            if (Either.isLeft(result)) {
-                expect(result.left).toBeInstanceOf(StorageError)
-                expect(result.left.message).toBe("Failed to generate signed URL")
-            }
-        })
-        await Effect.runPromise(Effect.provide(program, TestLayer))
-    })
-})
-
-describe("StorageService (R2)", () => {
-    const MockConfig = Layer.succeed(ConfigService, createMockConfig("r2"))
-    const TestLayer = StorageServiceLive.pipe(Layer.provide(MockConfig))
-
-    it("initializes and handles uploadPdf errors for R2", async () => {
-        const program = Effect.gen(function* () {
-            const service = yield* StorageService
-            const result = yield* Effect.either(service.uploadPdf("test.pdf", Buffer.from("test")))
-
+            const result = yield* Effect.either(service.uploadPdf("test.pdf", new Uint8Array([1, 2, 3])))
             expect(Either.isLeft(result)).toBe(true)
             if (Either.isLeft(result)) {
                 expect(result.left).toBeInstanceOf(StorageError)
                 expect(result.left.message).toBe("Failed to upload PDF to R2")
             }
         })
+
         await Effect.runPromise(Effect.provide(program, TestLayer))
     })
 
-    it("initializes and handles getSignedUrl errors for R2", async () => {
+    it("returns the auth-scoped download route URL for getSignedUrl", async () => {
+        const mockBucket = createMockR2Bucket()
+        const TestLayer = makeStorageService(mockBucket)
+
         const program = Effect.gen(function* () {
             const service = yield* StorageService
-            const result = yield* Effect.either(service.getSignedUrl("test.pdf"))
+            const url = yield* service.getSignedUrl("invoices/org-1/inv-1.pdf")
+            expect(url).toBe("/api/v1/invoices/inv-1/pdf/download")
+        })
 
-            // For getSignedUrl with standard Presigner, it does not actually hit the network,
-            // so it might actually succeed and return a signed URL synchronously!
-            if (Either.isRight(result)) {
-                expect(typeof result.right).toBe("string")
-                expect(result.right).toContain("acc.r2.cloudflarestorage.com")
-            } else {
-                expect(result.left).toBeInstanceOf(StorageError)
-                expect(result.left.message).toBe("Failed to generate signed URL for R2")
+        await Effect.runPromise(Effect.provide(program, TestLayer))
+    })
+
+    it("getPdf returns bytes when the object exists", async () => {
+        const bytes = new Uint8Array([0x25, 0x50, 0x44, 0x46])
+        const bucket = {
+            ...createMockR2Bucket(),
+            get: async (_key: string) => ({ arrayBuffer: async () => bytes.buffer }) as any,
+        } as unknown as R2Bucket
+        const TestLayer = makeStorageService(bucket)
+
+        const program = Effect.gen(function* () {
+            const service = yield* StorageService
+            const result = yield* service.getPdf("invoices/org-1/inv-1.pdf")
+            expect(result).toEqual(bytes)
+        })
+
+        await Effect.runPromise(Effect.provide(program, TestLayer))
+    })
+
+    it("getPdf fails with NotFoundError when the object is missing", async () => {
+        const mockBucket = createMockR2Bucket() // get returns null
+        const TestLayer = makeStorageService(mockBucket)
+
+        const program = Effect.gen(function* () {
+            const service = yield* StorageService
+            const result = yield* Effect.either(service.getPdf("invoices/org-1/missing.pdf"))
+            expect(Either.isLeft(result)).toBe(true)
+            if (Either.isLeft(result)) {
+                expect(result.left._tag).toBe("NotFoundError")
             }
         })
+
         await Effect.runPromise(Effect.provide(program, TestLayer))
     })
 })

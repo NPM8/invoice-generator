@@ -1,46 +1,46 @@
-import { Data } from "effect"
+import { Schema } from "effect"
 
-export class NotFoundError extends Data.TaggedError("NotFoundError")<{
-    readonly message: string
-    readonly entity?: string
-    readonly id?: string
-}> { }
+export class NotFoundError extends Schema.TaggedError<NotFoundError>()("NotFoundError", {
+    message: Schema.String,
+    entity: Schema.optional(Schema.String),
+    id: Schema.optional(Schema.String),
+}) { }
 
-export class UnauthorizedError extends Data.TaggedError("UnauthorizedError")<{
-    readonly message: string
-    readonly reason?: string
-}> { }
+export class UnauthorizedError extends Schema.TaggedError<UnauthorizedError>()("UnauthorizedError", {
+    message: Schema.String,
+    reason: Schema.optional(Schema.String),
+}) { }
 
-export class ValidationError extends Data.TaggedError("ValidationError")<{
-    readonly message: string
-    readonly details?: unknown
-}> { }
+export class ValidationError extends Schema.TaggedError<ValidationError>()("ValidationError", {
+    message: Schema.String,
+    details: Schema.optional(Schema.Unknown),
+}) { }
 
-export class DatabaseError extends Data.TaggedError("DatabaseError")<{
-    readonly message: string
-    readonly cause: unknown
-}> { }
+export class DatabaseError extends Schema.TaggedError<DatabaseError>()("DatabaseError", {
+    message: Schema.String,
+    cause: Schema.Unknown,
+}) { }
 
-export class StorageError extends Data.TaggedError("StorageError")<{
-    readonly message: string
-    readonly cause: unknown
-}> { }
+export class StorageError extends Schema.TaggedError<StorageError>()("StorageError", {
+    message: Schema.String,
+    cause: Schema.Unknown,
+}) { }
 
-export class QueueError extends Data.TaggedError("QueueError")<{
-    readonly message: string
-    readonly cause: unknown
-}> { }
+export class QueueError extends Schema.TaggedError<QueueError>()("QueueError", {
+    message: Schema.String,
+    cause: Schema.Unknown,
+}) { }
 
-export class PdfRenderError extends Data.TaggedError("PdfRenderError")<{
-    readonly message: string
-    readonly cause: unknown
-}> { }
+export class PdfRenderError extends Schema.TaggedError<PdfRenderError>()("PdfRenderError", {
+    message: Schema.String,
+    cause: Schema.Unknown,
+}) { }
 
-export class CallbackError extends Data.TaggedError("CallbackError")<{
-    readonly message: string
-    readonly cause: unknown
-}> { }
+export class CallbackError extends Schema.TaggedError<CallbackError>()("CallbackError", {
+    message: Schema.String,
+    cause: Schema.Unknown,
+}) { }
 
-export class ConfigurationError extends Data.TaggedError("ConfigurationError")<{
-    readonly message: string
-}> { }
+export class ConfigurationError extends Schema.TaggedError<ConfigurationError>()("ConfigurationError", {
+    message: Schema.String,
+}) { }

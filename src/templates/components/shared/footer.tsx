@@ -2,14 +2,14 @@ import React from "react"
 import { View, Text, StyleSheet } from "@react-pdf/renderer"
 
 const styles = StyleSheet.create({
-    footer: { position: "absolute", bottom: 40, left: 40, right: 40, borderTop: 1, borderTopColor: "#eee", paddingTop: 10 },
+    footer: { position: "absolute", bottom: 40, left: 40, right: 40, borderTopWidth: 1, borderTopColor: "#eee", paddingTop: 10 },
     footerText: { fontSize: 8, color: "#777", textAlign: "center", marginBottom: 2 }
 })
 
 interface FooterProps {
     sellerName: string
     sellerAddress: string
-    sellerTaxId?: string | null
+    sellerTaxId?: string | null | undefined
 }
 
 export function Footer({ sellerName, sellerAddress, sellerTaxId }: FooterProps) {

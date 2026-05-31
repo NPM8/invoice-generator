@@ -3,6 +3,7 @@ import { Effect, Layer } from "effect"
 import { InvoiceService, InvoiceServiceLive } from "../../../src/shared/services/invoice.js"
 import { DatabaseService } from "../../../src/shared/services/database.js"
 import { QueueService } from "../../../src/shared/services/queue.js"
+import { StorageService } from "../../../src/shared/services/storage.js"
 import { OrganizationService } from "../../../src/shared/services/organization.js"
 import { TemplateService } from "../../../src/shared/services/template.js"
 
@@ -21,6 +22,15 @@ const MockQueueService = Layer.succeed(
     QueueService.of({
         enqueuePdfGeneration: () => Effect.void,
         enqueueCallbackDelivery: () => Effect.void,
+    })
+)
+
+const MockStorageService = Layer.succeed(
+    StorageService,
+    StorageService.of({
+        uploadPdf: () => Effect.void,
+        getSignedUrl: () => Effect.succeed("/api/v1/invoices/mock/pdf/download"),
+        getPdf: () => Effect.succeed(new Uint8Array()),
     })
 )
 
@@ -48,10 +58,10 @@ const MockTemplateService = Layer.succeed(
 
 describe("InvoiceService Integration", () => {
     it("compiles and constructs the layer graph", async () => {
-        // This test simply verifies that the DI graph can be assembled
         const TestLayer = InvoiceServiceLive.pipe(
             Layer.provide(MockDatabaseService),
             Layer.provide(MockQueueService),
+            Layer.provide(MockStorageService),
             Layer.provide(MockOrganizationService),
             Layer.provide(MockTemplateService)
         )

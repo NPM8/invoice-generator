@@ -10,10 +10,10 @@ export class ApiKey extends Schema.Class<ApiKey>("ApiKey")({
   status: ApiKeyStatus,
   scopes: Schema.Array(Schema.String),
   rateLimit: PositiveInt,
-  lastUsedAt: Schema.NullOr(Schema.DateFromString),
-  expiresAt: Schema.NullOr(Schema.DateFromString),
-  createdAt: Schema.DateFromString,
-  revokedAt: Schema.NullOr(Schema.DateFromString),
+  lastUsedAt: Schema.NullOr(Schema.String),
+  expiresAt: Schema.NullOr(Schema.String),
+  createdAt: Schema.String,
+  revokedAt: Schema.NullOr(Schema.String),
   createdBy: Schema.NullOr(Schema.String),
 }) {}
 
@@ -21,7 +21,7 @@ export class CreateApiKey extends Schema.Class<CreateApiKey>("CreateApiKey")({
   orgId: UUID,
   name: Schema.String.pipe(Schema.minLength(1)),
   scopes: Schema.optionalWith(Schema.Array(Schema.String), { default: () => [] }),
-  expiresAt: Schema.optional(Schema.DateFromString),
+  expiresAt: Schema.optional(Schema.String),
 }) {}
 
 // Public response shape - NEVER expose keyHash
@@ -33,9 +33,9 @@ export class ApiKeyResponse extends Schema.Class<ApiKeyResponse>("ApiKeyResponse
   status: ApiKeyStatus,
   scopes: Schema.Array(Schema.String),
   rateLimit: PositiveInt,
-  lastUsedAt: Schema.NullOr(Schema.DateFromString),
-  expiresAt: Schema.NullOr(Schema.DateFromString),
-  createdAt: Schema.DateFromString,
+  lastUsedAt: Schema.NullOr(Schema.String),
+  expiresAt: Schema.NullOr(Schema.String),
+  createdAt: Schema.String,
 }) {}
 
 // Returned only once on creation - includes the raw key
@@ -47,8 +47,8 @@ export class ApiKeyWithSecret extends Schema.Class<ApiKeyWithSecret>("ApiKeyWith
   status: ApiKeyStatus,
   scopes: Schema.Array(Schema.String),
   rateLimit: PositiveInt,
-  lastUsedAt: Schema.NullOr(Schema.DateFromString),
-  expiresAt: Schema.NullOr(Schema.DateFromString),
-  createdAt: Schema.DateFromString,
+  lastUsedAt: Schema.NullOr(Schema.String),
+  expiresAt: Schema.NullOr(Schema.String),
+  createdAt: Schema.String,
   key: Schema.String,
 }) {}

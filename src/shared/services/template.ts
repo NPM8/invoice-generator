@@ -15,6 +15,21 @@ export class TemplateService extends Context.Tag("TemplateService")<
     }
 >() { }
 
+const precompile = async (tsxCode: string): Promise<string> => {
+    // Lazy import: esbuild is a Node build tool and cannot initialize on the
+    // Cloudflare Workers runtime. Deferring the import keeps the worker bootable;
+    // precompile is only reachable via template create/update (see AGENTS.md).
+    const esbuild = await import("esbuild")
+    const result = await esbuild.transform(tsxCode, {
+        loader: "tsx",
+        format: "esm",
+        target: "esnext",
+        jsx: "automatic",
+        jsxImportSource: "react",
+    })
+    return result.code
+}
+
 const createTemplateService = Effect.gen(function* () {
     const dbService = yield* DatabaseService
     const client = dbService.getAdminClient()
@@ -27,18 +42,18 @@ const createTemplateService = Effect.gen(function* () {
         version: row.version,
         isDefault: row.is_default,
         componentCode: row.component_code,
+        compiledCode: row.compiled_code,
         propsSchema: row.props_schema,
         status: row.status,
         createdAt: row.created_at,
         updatedAt: row.updated_at,
     })
 
-    return {
+    const service: Context.Tag.Service<TemplateService> = {
         resolveForInvoice: (orgId, requestedTemplateId) =>
             Effect.tryPromise({
                 try: async () => {
                     if (requestedTemplateId) {
-                        // Fetch specific template, ensure it belongs to this org or is global
                         const { data, error } = await client
                             .from("invoice_templates")
                             .select()
@@ -52,14 +67,13 @@ const createTemplateService = Effect.gen(function* () {
                         }
                         return data
                     } else {
-                        // Find default template: org default first, then global default
                         const { data, error } = await client
                             .from("invoice_templates")
                             .select()
                             .eq("is_default", true)
                             .eq("status", "active")
                             .or(`org_id.eq.${orgId},org_id.is.null`)
-                            .order("org_id", { nullsFirst: false }) // Prioritize org-specific over global
+                            .order("org_id", { nullsFirst: false })
                             .limit(1)
                             .single()
 
@@ -82,6 +96,12 @@ const createTemplateService = Effect.gen(function* () {
         create: (orgId, input) =>
             Effect.tryPromise({
                 try: async () => {
+                    // Pre-compile TSX if component code is provided
+                    let compiledCode: string | null = null
+                    if (input.componentCode) {
+                        compiledCode = await precompile(input.componentCode)
+                    }
+
                     const { data, error } = await client
                         .from("invoice_templates")
                         .insert({
@@ -89,6 +109,7 @@ const createTemplateService = Effect.gen(function* () {
                             name: input.name,
                             description: input.description,
                             component_code: input.componentCode,
+                            compiled_code: compiledCode,
                             props_schema: input.propsSchema,
                         })
                         .select()
@@ -105,7 +126,6 @@ const createTemplateService = Effect.gen(function* () {
                 try: async () => {
                     let query = client.from("invoice_templates").select().eq("id", id)
                     if (orgIdContext) {
-                        // Let orgs view global templates too
                         query = query.or(`org_id.eq.${orgIdContext},org_id.is.null`)
                     }
 
@@ -129,18 +149,6 @@ const createTemplateService = Effect.gen(function* () {
         update: (id, input, orgIdContext) =>
             Effect.tryPromise({
                 try: async () => {
-                    let query = client.from("invoice_templates").update({
-                        name: input.name,
-                        description: input.description,
-                        status: input.status,
-                        component_code: input.componentCode,
-                        props_schema: input.propsSchema,
-                        version: undefined // We could bump version here
-                    }).eq("id", id)
-                    if (orgIdContext) {
-                        query = query.eq("org_id", orgIdContext)
-                    }
-
                     // Bump version
                     const { data: current, error: fetchErr } = await client.from("invoice_templates").select("version").eq("id", id).single()
                     if (fetchErr) throw fetchErr
@@ -155,9 +163,15 @@ const createTemplateService = Effect.gen(function* () {
 
                     if (input.componentCode) {
                         updatePayload.version = current.version + 1
+                        updatePayload.compiled_code = await precompile(input.componentCode)
                     }
 
-                    const { data, error } = await client.from("invoice_templates").update(updatePayload).eq("id", id).select().single()
+                    let query = client.from("invoice_templates").update(updatePayload).eq("id", id)
+                    if (orgIdContext) {
+                        query = query.eq("org_id", orgIdContext)
+                    }
+
+                    const { data, error } = await query.select().single()
 
                     if (error) {
                         if (error.code === "PGRST116") return null
@@ -215,6 +229,8 @@ const createTemplateService = Effect.gen(function* () {
                 )
             ),
     }
+
+    return service
 })
 
 export const TemplateServiceLive = Layer.effect(TemplateService, createTemplateService)

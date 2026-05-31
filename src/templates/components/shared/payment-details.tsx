@@ -10,10 +10,10 @@ const styles = StyleSheet.create({
 })
 
 interface PaymentDetailsProps {
-    bankName?: string | null
-    bankIban?: string | null
-    bankSwift?: string | null
-    bankAccountNumber?: string | null
+    bankName?: string | null | undefined
+    bankIban?: string | null | undefined
+    bankSwift?: string | null | undefined
+    bankAccountNumber?: string | null | undefined
 }
 
 export function PaymentDetails({ bankName, bankIban, bankSwift, bankAccountNumber }: PaymentDetailsProps) {

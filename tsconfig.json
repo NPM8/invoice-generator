@@ -23,10 +23,12 @@
     "noUnusedParameters": false,
     "noPropertyAccessFromIndexSignature": false,
 
+    "types": ["@cloudflare/workers-types", "@types/bun"],
+
     "paths": {
       "@shared/*": ["./src/shared/*"],
-      "@api/*": ["./src/api/*"],
-      "@worker/*": ["./src/worker/*"],
+      "@api-worker/*": ["./src/api-worker/*"],
+      "@invoice-worker/*": ["./src/invoice-worker/*"],
       "@templates/*": ["./src/templates/*"]
     }
   },

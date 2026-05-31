@@ -6,11 +6,14 @@ export class InvoiceTemplate extends Schema.Class<InvoiceTemplate>("InvoiceTempl
   orgId: UUID,
   name: Schema.String,
   description: Schema.NullOr(Schema.String),
+  version: Schema.Number,
+  isDefault: Schema.Boolean,
   status: TemplateStatus,
   componentCode: Schema.String,
+  compiledCode: Schema.NullOr(Schema.String),
   propsSchema: Schema.NullOr(Schema.Unknown),
-  createdAt: Schema.DateFromString,
-  updatedAt: Schema.DateFromString,
+  createdAt: Schema.String,
+  updatedAt: Schema.String,
 }) {}
 
 export class CreateTemplate extends Schema.Class<CreateTemplate>("CreateTemplate")({

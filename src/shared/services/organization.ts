@@ -71,7 +71,7 @@ const createOrganizationService = Effect.gen(function* () {
         return result
     }
 
-    return {
+    const service: Context.Tag.Service<OrganizationService> = {
         create: (input) =>
             Effect.tryPromise({
                 try: async () => {
@@ -155,6 +155,8 @@ const createOrganizationService = Effect.gen(function* () {
                 catch: (cause) => new DatabaseError({ message: "Failed to list organizations", cause }),
             }),
     }
+
+    return service
 })
 
 export const OrganizationServiceLive = Layer.effect(OrganizationService, createOrganizationService)

@@ -1,9 +1,10 @@
 import { Context, Effect, Layer } from "effect"
 import { DatabaseService } from "./database.js"
 import { QueueService } from "./queue.js"
+import { StorageService } from "./storage.js"
 import { OrganizationService } from "./organization.js"
 import { TemplateService } from "./template.js"
-import { DatabaseError, NotFoundError } from "../errors/index.js"
+import { DatabaseError, NotFoundError, QueueError, StorageError } from "../errors/index.js"
 import { CreateInvoice, Invoice, InvoiceItem } from "../schemas/invoice.js"
 import { calculateLineVat, computeVatSummary, computeInvoiceTotals, determineReverseCharge } from "./vat.js"
 
@@ -15,12 +16,14 @@ export class InvoiceService extends Context.Tag("InvoiceService")<
         readonly list: (orgIdContext?: string) => Effect.Effect<Array<typeof Invoice.Type>, DatabaseError>
         readonly updateStatus: (id: string, status: string, pdfUrl?: string) => Effect.Effect<void, DatabaseError>
         readonly getPdfUrl: (id: string, orgIdContext?: string) => Effect.Effect<string, DatabaseError | NotFoundError>
+        readonly getPdfContent: (id: string, orgIdContext?: string) => Effect.Effect<Uint8Array, DatabaseError | NotFoundError | StorageError>
     }
 >() { }
 
 const createInvoiceService = Effect.gen(function* () {
     const dbService = yield* DatabaseService
     const queueService = yield* QueueService
+    const storageService = yield* StorageService
     const orgService = yield* OrganizationService
     const templateService = yield* TemplateService
 
@@ -80,7 +83,7 @@ const createInvoiceService = Effect.gen(function* () {
         createdAt: row.created_at,
     })
 
-    return {
+    const service: Context.Tag.Service<InvoiceService> = {
         create: (orgId, input) =>
             Effect.gen(function* () {
                 // 1. Resolve Org details for seller snapshot
@@ -194,8 +197,10 @@ const createInvoiceService = Effect.gen(function* () {
                 })
 
                 // 7. Enqueue PDF Generation Job
-                const jobId = `pdf-${insertInvoice.id}`
-                yield* queueService.enqueuePdfGeneration(jobId, insertInvoice.id)
+                // Contain QueueError so the public create error channel stays DatabaseError | NotFoundError
+                yield* queueService.enqueuePdfGeneration(insertInvoice.id).pipe(
+                    Effect.catchTag("QueueError", (e) => new DatabaseError({ message: e.message, cause: e.cause }))
+                )
 
                 // Return mapped invoice
                 return mapInvoiceToCamelCase(insertInvoice) as typeof Invoice.Type
@@ -289,8 +294,33 @@ const createInvoiceService = Effect.gen(function* () {
                         ? Effect.succeed(url)
                         : Effect.fail(new NotFoundError({ message: "Invoice or PDF not found", id }))
                 )
+            ),
+
+        getPdfContent: (id, orgIdContext) =>
+            Effect.tryPromise({
+                try: async () => {
+                    let query = client.from("invoices").select("org_id, pdf_url").eq("id", id)
+                    if (orgIdContext) query = query.eq("org_id", orgIdContext)
+
+                    const { data, error } = await query.single()
+
+                    if (error) {
+                        if (error.code === "PGRST116") return null
+                        throw error
+                    }
+                    return data
+                },
+                catch: (cause) => new DatabaseError({ message: "Failed to fetch invoice for PDF", cause }),
+            }).pipe(
+                Effect.flatMap((row) =>
+                    row && row.pdf_url
+                        ? storageService.getPdf(`invoices/${row.org_id}/${id}.pdf`)
+                        : Effect.fail(new NotFoundError({ message: "Invoice or PDF not found", id }))
+                )
             )
     }
+
+    return service
 })
 
 export const InvoiceServiceLive = Layer.effect(InvoiceService, createInvoiceService)

@@ -10,6 +10,7 @@ export interface LineVatResult {
 
 export interface VatSummaryEntry {
     vatRate: number
+    vatType: VatType
     netAmount: number
     vatAmount: number
     grossAmount: number
@@ -46,6 +47,7 @@ export function computeVatSummary(
         vatAmount: number
         grossAmount: number
         vatRate: number
+        vatType: VatType
     }>
 ): VatSummaryEntry[] {
     const summaryMap = new Map<number, VatSummaryEntry>()
@@ -54,6 +56,7 @@ export function computeVatSummary(
         const rate = line.vatRate
         const current = summaryMap.get(rate) || {
             vatRate: rate,
+            vatType: line.vatType,
             netAmount: 0,
             vatAmount: 0,
             grossAmount: 0,
@@ -68,6 +71,7 @@ export function computeVatSummary(
 
     const result = Array.from(summaryMap.values()).map((entry) => ({
         vatRate: entry.vatRate,
+        vatType: entry.vatType,
         netAmount: Number(entry.netAmount.toFixed(2)),
         vatAmount: Number(entry.vatAmount.toFixed(2)),
         grossAmount: Number(entry.grossAmount.toFixed(2)),

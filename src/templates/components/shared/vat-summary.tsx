@@ -3,7 +3,7 @@ import { View, Text, StyleSheet } from "@react-pdf/renderer"
 
 const styles = StyleSheet.create({
     bottomSection: { flexDirection: "row", justifyContent: "space-between", marginBottom: 30 },
-    vatSummaryBox: { width: "45%", border: 1, borderColor: "#eee", padding: 10, borderRadius: 2 },
+    vatSummaryBox: { width: "45%", borderWidth: 1, borderColor: "#eee", padding: 10, borderRadius: 2 },
     vatSummaryTitle: { fontWeight: "bold", marginBottom: 6, fontSize: 9 },
     vatRow: { flexDirection: "row", justifyContent: "space-between", marginBottom: 3, fontSize: 9 },
 
@@ -56,7 +56,7 @@ export function VatSummary({
                     <Text style={styles.totalLabel}>Total VAT</Text>
                     <Text style={styles.totalValue}>{formatCurrency(totalVat, currency)}</Text>
                 </View>
-                <View style={[styles.totalRow, { marginTop: 10, paddingTop: 10, borderTop: 1, borderTopColor: "#ddd" }]}>
+                <View style={[styles.totalRow, { marginTop: 10, paddingTop: 10, borderTopWidth: 1, borderTopColor: "#ddd" }]}>
                     <Text style={styles.totalFinalLabel}>Total Due</Text>
                     <Text style={styles.totalFinalValue}>{formatCurrency(total, currency)}</Text>
                 </View>

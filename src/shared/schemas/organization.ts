@@ -32,8 +32,8 @@ export class Organization extends Schema.Class<Organization>("Organization")({
   defaultPaymentTermsDays: PositiveInt,
   invoicePrefix: Schema.String,
   nextInvoiceNumber: PositiveInt,
-  createdAt: Schema.DateFromString,
-  updatedAt: Schema.DateFromString,
+  createdAt: Schema.String,
+  updatedAt: Schema.String,
 }) {}
 
 export class CreateOrganization extends Schema.Class<CreateOrganization>("CreateOrganization")({

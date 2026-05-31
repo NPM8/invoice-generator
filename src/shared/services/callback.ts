@@ -13,7 +13,7 @@ const createCallbackService = Effect.gen(function* () {
     const dbService = yield* DatabaseService
     const client = dbService.getAdminClient()
 
-    return {
+    const service: Context.Tag.Service<CallbackService> = {
         deliver: (invoiceId) =>
             Effect.gen(function* () {
                 const fetchResult = yield* Effect.tryPromise({
@@ -83,6 +83,8 @@ const createCallbackService = Effect.gen(function* () {
                 }
             })
     }
+
+    return service
 })
 
 export const CallbackServiceLive = Layer.effect(CallbackService, createCallbackService)

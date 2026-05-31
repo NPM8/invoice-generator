@@ -41,7 +41,7 @@ export class InvoiceItem extends Schema.Class<InvoiceItem>("InvoiceItem")({
   vatAmount: Money,
   netAmount: Money,
   grossAmount: Money,
-  createdAt: Schema.DateFromString,
+  createdAt: Schema.String,
 }) {}
 
 export class CreateInvoiceItem extends Schema.Class<CreateInvoiceItem>("CreateInvoiceItem")({
@@ -88,19 +88,19 @@ export class Invoice extends Schema.Class<Invoice>("Invoice")({
   dueDate: Schema.String,
   // PDF
   pdfUrl: Schema.NullOr(Schema.String),
-  pdfGeneratedAt: Schema.NullOr(Schema.DateFromString),
+  pdfGeneratedAt: Schema.NullOr(Schema.String),
   // Callback
   callbackUrl: Schema.NullOr(Url),
   callbackStatus: CallbackStatus,
   callbackAttempts: Schema.Number.pipe(Schema.int(), Schema.nonNegative()),
-  callbackLastAttemptAt: Schema.NullOr(Schema.DateFromString),
+  callbackLastAttemptAt: Schema.NullOr(Schema.String),
   // Metadata
   notes: Schema.NullOr(Schema.String),
   terms: Schema.NullOr(Schema.String),
   metadata: Schema.NullOr(Schema.Unknown),
   // Timestamps
-  createdAt: Schema.DateFromString,
-  updatedAt: Schema.DateFromString,
+  createdAt: Schema.String,
+  updatedAt: Schema.String,
 }) {}
 
 export class CreateInvoice extends Schema.Class<CreateInvoice>("CreateInvoice")({

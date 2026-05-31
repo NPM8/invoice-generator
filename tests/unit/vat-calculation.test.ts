@@ -33,9 +33,9 @@ describe("VAT Calculation", () => {
 
     it("computes summary grouped by rate correctly", () => {
         const lines = [
-            { netAmount: 100, vatAmount: 20, grossAmount: 120, vatRate: 20 },
-            { netAmount: 50, vatAmount: 10, grossAmount: 60, vatRate: 20 },
-            { netAmount: 200, vatAmount: 10, grossAmount: 210, vatRate: 5 },
+            { netAmount: 100, vatAmount: 20, grossAmount: 120, vatRate: 20, vatType: "standard" as const },
+            { netAmount: 50, vatAmount: 10, grossAmount: 60, vatRate: 20, vatType: "standard" as const },
+            { netAmount: 200, vatAmount: 10, grossAmount: 210, vatRate: 5, vatType: "standard" as const },
         ]
 
         const summary = computeVatSummary(lines)
@@ -44,6 +44,7 @@ describe("VAT Calculation", () => {
         const rate5 = summary.find(s => s.vatRate === 5)!
         expect(rate5.netAmount).toBe(200)
         expect(rate5.vatAmount).toBe(10)
+        expect(rate5.vatType).toBe("standard")
 
         const rate20 = summary.find(s => s.vatRate === 20)!
         expect(rate20.netAmount).toBe(150)

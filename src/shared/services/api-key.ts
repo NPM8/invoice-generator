@@ -1,5 +1,4 @@
 import { Context, Effect, Layer } from "effect"
-import crypto from "crypto"
 import { DatabaseService } from "./database.js"
 import { DatabaseError, NotFoundError, UnauthorizedError } from "../errors/index.js"
 import { ApiKeyResponse, ApiKeyWithSecret, CreateApiKey } from "../schemas/api-key.js"
@@ -15,6 +14,26 @@ export class ApiKeyService extends Context.Tag("ApiKeyService")<
         readonly remove: (id: string, orgIdContext?: string) => Effect.Effect<void, DatabaseError | NotFoundError>
     }
 >() { }
+
+const hexEncode = (buffer: ArrayBuffer) =>
+    Array.from(new Uint8Array(buffer))
+        .map((b) => b.toString(16).padStart(2, "0"))
+        .join("")
+
+const hashKey = async (key: string): Promise<string> => {
+    const encoded = new TextEncoder().encode(key)
+    const digest = await crypto.subtle.digest("SHA-256", encoded)
+    return hexEncode(digest)
+}
+
+const constantTimeEqual = (a: string, b: string): boolean => {
+    if (a.length !== b.length) return false
+    let result = 0
+    for (let i = 0; i < a.length; i++) {
+        result |= a.charCodeAt(i) ^ b.charCodeAt(i)
+    }
+    return result === 0
+}
 
 const createApiKeyService = Effect.gen(function* () {
     const dbService = yield* DatabaseService
@@ -35,15 +54,13 @@ const createApiKeyService = Effect.gen(function* () {
         createdBy: row.created_by,
     })
 
-    const hashKey = (key: string) => crypto.createHash("sha256").update(key).digest("hex")
-
-    return {
+    const service: Context.Tag.Service<ApiKeyService> = {
         generate: (input) =>
             Effect.tryPromise({
                 try: async () => {
                     const rawKey = `inv_${crypto.randomUUID().replace(/-/g, "")}`
                     const keyPrefix = rawKey.substring(0, 8)
-                    const keyHash = hashKey(rawKey)
+                    const keyHash = await hashKey(rawKey)
 
                     const { data, error } = await client
                         .from("api_keys")
@@ -76,7 +93,7 @@ const createApiKeyService = Effect.gen(function* () {
                     }
 
                     const prefix = keyString.substring(0, 8)
-                    const providedHash = hashKey(keyString)
+                    const providedHash = await hashKey(keyString)
 
                     const { data, error } = await client
                         .from("api_keys")
@@ -90,15 +107,10 @@ const createApiKeyService = Effect.gen(function* () {
                         throw error
                     }
 
-                    // Timing safe equality check to prevent timing attacks
-                    const isMatch = crypto.timingSafeEqual(
-                        Buffer.from(providedHash, 'hex'),
-                        Buffer.from(data.key_hash, 'hex')
-                    )
+                    const isMatch = constantTimeEqual(providedHash, data.key_hash)
 
                     if (!isMatch) return { valid: false as const }
 
-                    // Check expiration
                     if (data.expires_at && new Date(data.expires_at) < new Date()) {
                         return { valid: false as const }
                     }
@@ -163,7 +175,7 @@ const createApiKeyService = Effect.gen(function* () {
                     // Generate new
                     const rawKey = `inv_${crypto.randomUUID().replace(/-/g, "")}`
                     const keyPrefix = rawKey.substring(0, 8)
-                    const keyHash = hashKey(rawKey)
+                    const keyHash = await hashKey(rawKey)
 
                     const { data: newKeyData, error: insertError } = await client
                         .from("api_keys")
@@ -231,6 +243,8 @@ const createApiKeyService = Effect.gen(function* () {
                 )
             )
     }
+
+    return service
 })
 
 export const ApiKeyServiceLive = Layer.effect(ApiKeyService, createApiKeyService)

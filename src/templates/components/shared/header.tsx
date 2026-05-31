@@ -11,7 +11,7 @@ const styles = StyleSheet.create({
     metaLabel: { width: 70, color: "#666", textAlign: "right", marginRight: 10 },
     metaValue: { width: 90, textAlign: "right", fontWeight: "bold" },
 
-    addressContainer: { flexDirection: "row", justifyContent: "space-between", marginBottom: 40, borderTop: 1, borderTopColor: "#eee", paddingTop: 20 },
+    addressContainer: { flexDirection: "row", justifyContent: "space-between", marginBottom: 40, borderTopWidth: 1, borderTopColor: "#eee", paddingTop: 20 },
     addressBlock: { width: "45%" },
     addressTitle: { fontSize: 11, fontWeight: "bold", marginBottom: 8, color: "#666", textTransform: "uppercase" },
     addressText: { marginBottom: 3, lineHeight: 1.4 },
@@ -19,7 +19,7 @@ const styles = StyleSheet.create({
 })
 
 interface HeaderProps {
-    logoUrl?: string | null
+    logoUrl?: string | null | undefined
     invoiceNumber: string
     issueDate: string
     dueDate: string
@@ -27,11 +27,11 @@ interface HeaderProps {
 
     sellerName: string
     sellerAddress: string
-    sellerTaxId?: string | null
+    sellerTaxId?: string | null | undefined
 
     buyerName: string
-    buyerAddress?: string | null
-    buyerTaxId?: string | null
+    buyerAddress?: string | null | undefined
+    buyerTaxId?: string | null | undefined
 }
 
 export function Header(props: HeaderProps) {

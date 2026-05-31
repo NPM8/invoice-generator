@@ -1,6 +1,6 @@
 import React from "react"
-import { Document, Page, View, Text, StyleSheet, Font } from "@react-pdf/renderer"
-import { InvoicePropsType } from "../types.js"
+import { Document, Page, View, Text, StyleSheet } from "@react-pdf/renderer"
+import type { InvoicePropsType } from "../types.js"
 
 import { Header } from "./shared/header.js"
 import { ItemsTable } from "./shared/items-table.js"
@@ -8,13 +8,9 @@ import { VatSummary } from "./shared/vat-summary.js"
 import { PaymentDetails } from "./shared/payment-details.js"
 import { Footer } from "./shared/footer.js"
 
-Font.register({
-    family: "Helvetica",
-    fonts: [
-        { fontWeight: "normal" },
-        { fontWeight: "bold" },
-    ]
-})
+// "Helvetica" is a PDF standard built-in font in @react-pdf/renderer.
+// It (and its bold variant via fontWeight) resolves automatically without
+// Font.register, which requires a real font `src` per FontSource.
 
 const styles = StyleSheet.create({
     page: { padding: 40, fontFamily: "Helvetica", fontSize: 10, color: "#333", backgroundColor: "#fff" },
