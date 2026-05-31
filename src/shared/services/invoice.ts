@@ -15,6 +15,7 @@ export class InvoiceService extends Context.Tag("InvoiceService")<
         readonly findById: (id: string, orgIdContext?: string) => Effect.Effect<{ invoice: typeof Invoice.Type, items: Array<typeof InvoiceItem.Type> }, DatabaseError | NotFoundError>
         readonly list: (orgIdContext?: string) => Effect.Effect<Array<typeof Invoice.Type>, DatabaseError>
         readonly updateStatus: (id: string, status: string, pdfUrl?: string) => Effect.Effect<void, DatabaseError>
+        readonly markFailed: (id: string, message: string) => Effect.Effect<void, DatabaseError>
         readonly getPdfUrl: (id: string, orgIdContext?: string) => Effect.Effect<string, DatabaseError | NotFoundError>
         readonly getPdfContent: (id: string, orgIdContext?: string) => Effect.Effect<Uint8Array, DatabaseError | NotFoundError | StorageError>
     }
@@ -295,6 +296,14 @@ const createInvoiceService = Effect.gen(function* () {
                         : Effect.fail(new NotFoundError({ message: "Invoice or PDF not found", id }))
                 )
             ),
+
+        markFailed: (id, message) =>
+            Effect.tryPromise({
+                try: async () => {
+                    await client.from("invoices").update({ status: "failed", metadata: { error: message } }).eq("id", id)
+                },
+                catch: (cause) => new DatabaseError({ message: "Failed to mark invoice failed", cause }),
+            }),
 
         getPdfContent: (id, orgIdContext) =>
             Effect.tryPromise({

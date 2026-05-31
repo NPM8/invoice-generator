@@ -7,6 +7,11 @@ compatibility_flags = ["nodejs_compat"]
 LOG_LEVEL = "info"
 NODE_ENV = "production"
 
+# react-pdf's default (Node) build's renderToBuffer throws on workerd; use the
+# browser build (pdf().toBlob()) which runs on the Workers runtime.
+[alias]
+"@react-pdf/renderer" = "@react-pdf/renderer/lib/react-pdf.browser.js"
+
 # Secrets (set via `wrangler secret put`):
 # SUPABASE_URL
 # SUPABASE_SERVICE_ROLE_KEY

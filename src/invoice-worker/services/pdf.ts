@@ -1,5 +1,5 @@
 import { Context, Effect, Layer } from "effect"
-import { renderToBuffer, type DocumentProps } from "@react-pdf/renderer"
+import { pdf, type DocumentProps } from "@react-pdf/renderer"
 import { PdfRenderError } from "../../shared/errors/index.js"
 import React from "react"
 import type { InvoicePropsType } from "../../templates/types.js"
@@ -22,8 +22,11 @@ const createPdfService = Effect.succeed({
                 // types it by the component's props, so re-type to the renderer's
                 // expected Document element using react-pdf's public DocumentProps type.
                 const doc = React.createElement(Component, props) as React.ReactElement<DocumentProps>
-                const buffer = await renderToBuffer(doc)
-                return new Uint8Array(buffer)
+                // pdf().toBlob() works in both the Node and browser builds; the
+                // worker aliases @react-pdf/renderer to the browser build (renderToBuffer
+                // is Node-only and throws on workerd). See wrangler.invoice.toml [alias].
+                const blob = await pdf(doc).toBlob()
+                return new Uint8Array(await blob.arrayBuffer())
             },
             catch: (cause) => new PdfRenderError({ message: "Failed to render PDF to buffer", cause }),
         }),

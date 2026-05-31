@@ -93,4 +93,13 @@ export const handlePdfGeneration = (invoiceId: string) =>
         }
 
         yield* logger.info(`PDF generated for invoice ${invoiceId}`)
-    })
+    }).pipe(
+        Effect.tapError((e) =>
+            Effect.gen(function* () {
+                const invoiceService = yield* InvoiceService
+                const cause = (e as { cause?: unknown }).cause
+                const detail = `${(e as Error).message ?? e} :: ${(cause as Error)?.message ?? cause ?? ""}`.slice(0, 800)
+                yield* invoiceService.markFailed(invoiceId, detail)
+            }).pipe(Effect.ignore),
+        ),
+    )
