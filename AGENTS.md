@@ -143,15 +143,18 @@ Secrets via `wrangler secret put`: `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`,
 - Template styles used numeric `border`/`borderTop`/`borderBottom` (react-pdf needs `*Width`) →
   "Invalid border style: 1". Switched to `borderWidth`/`borderTopWidth`/`borderBottomWidth`.
 
+### Templates
+- **Bundled templates work** (Path A): `src/templates/registry.ts` maps `invoice_templates.name` →
+  a compiled React component (`default-invoice`, `minimal`); `pdf-generation.ts` selects via
+  `resolveTemplateComponent(template.name)`, unknown → default. Add a design: new component under
+  `src/templates/components/`, register it, create a template row with that `name`, use its `templateId`.
+- **Arbitrary runtime TSX compilation is NOT supported on Workers:** `template-compiler.ts` `compile()`
+  throws (esbuild / runtime eval can't run on workerd — `TODO(workers)`) and is no longer on the render
+  path. Per-tenant custom designs must go through the registry (or a future build-time step).
+
 ### NOT done / broken
-- **Custom template compilation is stubbed on Workers:** `invoice-worker/services/template-compiler.ts`
-  `compile()` throws — runtime eval / `URL.createObjectURL` don't exist on CF Workers. Only the built-in
-  default template renders (non-default templates short-circuit via `template.isDefault`). See the
-  `TODO(workers)` in that file: real fix needs build-time/per-org bundled modules. `compileTemplateCode`
-  (esbuild transform at create/update time) still works.
 - **README is stale** — default `bun init` boilerplate (`bun run index.ts` no longer exists).
 - No deploy has been run/verified against real CF account (e2e uses local `wrangler dev` + Supabase only).
-- PDF custom-template path still stubbed on Workers (template-compiler `TODO(workers)`); default template renders fine.
 
 ### How the 141 typecheck errors were cleared (reference for similar work)
 1. `shared/errors/index.ts`: `Data.TaggedError` → `Schema.TaggedError` (unblocked all `.addError()`/`failure:`).
@@ -164,7 +167,8 @@ Secrets via `wrangler secret put`: `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`,
 7. `api-worker/index.ts`: merge `HttpServer.layerContext` for `DefaultServices`; `HttpMiddleware.cors()` (called).
 
 ### Suggested next steps (priority)
-1. Decide custom-template strategy (or drop custom templates) — see template-compiler `TODO(workers)`.
+1. (Optional) per-tenant arbitrary-code templates — needs a build-time/bundling step; bundled registry
+   (`src/templates/registry.ts`) covers fixed designs today.
 2. Update README. First real deploy against a CF account.
 
 ---

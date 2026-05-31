@@ -219,5 +219,48 @@ describe.skipIf(!pf.available)(
             )
             expect(res.status).toBe(401)
         })
+
+        // --- Bundled template selection (Path A) -------------------------------
+
+        it("renders a non-default bundled template selected by templateId", async () => {
+            // Create an invoice bound to the org-scoped "minimal" template.
+            const createRes = await fetch(`${config.baseUrl}/api/v1/invoices`, {
+                method: "POST",
+                headers: { "content-type": "application/json", "x-api-key": fx.orgKey },
+                body: JSON.stringify({
+                    templateId: fx.minimalTemplateId,
+                    buyerName: "Acme Buyer",
+                    buyerAddress: "10 Buyer Ave, Paris",
+                    buyerCountryCode: "FR",
+                    currency: "EUR",
+                    issueDate: "2026-01-15",
+                    dueDate: "2026-02-15",
+                    items: [
+                        { position: 1, description: "Design", quantity: 3, unitPrice: 250, vatRate: 19 },
+                    ],
+                }),
+            })
+            expect(createRes.status).toBe(200)
+            const inv = await createRes.json() as any
+            expect(inv.templateId).toBe(fx.minimalTemplateId)
+            const minimalInvoiceId: string = inv.id
+
+            // The invoice worker caches its ManagedRuntime (and the env it captured)
+            // at module scope, so it always writes to `workerEnv`'s R2 regardless of
+            // the env passed here. Reuse workerEnv and assert via the download route.
+            const { batch, acked } = makeQueueBatch([{ type: "pdf-generation", invoiceId: minimalInvoiceId }])
+            await invoiceWorker.queue(batch, workerEnv, makeCtx())
+            expect(acked).toEqual([0])
+
+            const api = makeApiHandler(workerEnv)
+            const dl = await api(
+                new Request(`http://e2e/api/v1/invoices/${minimalInvoiceId}/pdf/download`, {
+                    headers: { "x-api-key": fx.orgKey },
+                }),
+            )
+            expect(dl.status).toBe(200)
+            const buf = await dl.arrayBuffer()
+            expect(new Uint8Array(buf.slice(0, 4))).toEqual(new Uint8Array([0x25, 0x50, 0x44, 0x46]))
+        }, 30_000)
     },
 )

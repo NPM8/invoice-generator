@@ -5,8 +5,7 @@ import { StorageService } from "../../shared/services/storage.js"
 import { QueueService } from "../../shared/services/queue.js"
 import { LoggerService } from "../../shared/services/logger.js"
 import { PdfService } from "../services/pdf.js"
-import { TemplateCompilerService } from "../services/template-compiler.js"
-import DefaultInvoice from "../../templates/components/default-invoice.js"
+import { resolveTemplateComponent } from "../../templates/registry.js"
 import type { InvoicePropsType } from "../../templates/types.js"
 
 export const handlePdfGeneration = (invoiceId: string) =>
@@ -17,7 +16,6 @@ export const handlePdfGeneration = (invoiceId: string) =>
         const queueService = yield* QueueService
         const logger = yield* LoggerService
         const pdfService = yield* PdfService
-        const compilerService = yield* TemplateCompilerService
 
         yield* invoiceService.updateStatus(invoiceId, "processing")
 
@@ -78,16 +76,9 @@ export const handlePdfGeneration = (invoiceId: string) =>
             }
         }
 
-        let Component = DefaultInvoice as any
-
-        if (!template.isDefault) {
-            Component = yield* compilerService.compile(
-                template.id,
-                template.version,
-                template.componentCode,
-                template.compiledCode
-            )
-        }
+        // Bundled templates are selected by name (no runtime TSX compilation on
+        // Workers); unknown names fall back to the default. See templates/registry.ts.
+        const Component = resolveTemplateComponent(template.name)
 
         const buffer = yield* pdfService.renderToBuffer(Component, props)
 

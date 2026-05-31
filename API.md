@@ -153,9 +153,13 @@ default renders without custom code.
 { "name": "Modern", "description": "optional",
   "componentCode": "<TSX source>", "propsSchema": { } }
 ```
-> Note: custom-template compilation (`componentCode`) is **not functional on the
-> Workers runtime** yet (esbuild can't run there). Only the default template
-> renders. See `AGENTS.md`. Errors: 401, 404, 500.
+> Rendering: the worker selects a **bundled** React component by the template's
+> `name` (registry in `src/templates/registry.ts` — e.g. `default-invoice`,
+> `minimal`); unknown names fall back to the default. To use one, create a
+> template row whose `name` matches a registry key, then pass its `templateId`
+> when creating an invoice. Arbitrary `componentCode` compilation at runtime is
+> **not** supported on Workers (esbuild can't run there) — add new designs to the
+> registry instead. See `AGENTS.md`. Errors: 401, 404, 500.
 
 ---
 

@@ -83,7 +83,8 @@ const sha256hex = async (s: string): Promise<string> => {
 
 export interface Fixtures {
     orgId: string
-    templateId: string
+    templateId: string // global default template
+    minimalTemplateId: string // org-scoped bundled "minimal" template
     adminKey: string // raw key, has "admin" scope
     orgKey: string // raw key, scopes invoice:read/write only
     createdOrgIds: string[] // orgs created during the run (for cleanup)
@@ -139,6 +140,21 @@ export async function seedFixtures(config: E2eConfig): Promise<Fixtures> {
         .single()
     if (tplErr) throw new Error(`seed template failed: ${tplErr.message}`)
 
+    // Org-scoped non-default template whose name matches a bundled component
+    // (templates/registry.ts) so the worker selects MinimalInvoice.
+    const { data: minimalTpl, error: minimalErr } = await db
+        .from("invoice_templates")
+        .insert({
+            org_id: org.id,
+            name: "minimal",
+            is_default: false,
+            status: "active",
+            component_code: "export default () => null",
+        })
+        .select()
+        .single()
+    if (minimalErr) throw new Error(`seed minimal template failed: ${minimalErr.message}`)
+
     // Distinct 8-char prefixes ("inv_adm_" / "inv_org_") to satisfy the unique
     // key_prefix index and the "inv_" check in validate().
     const adminRaw = `inv_adm_${crypto.randomUUID().replaceAll("-", "")}`
@@ -169,6 +185,7 @@ export async function seedFixtures(config: E2eConfig): Promise<Fixtures> {
     return {
         orgId: org.id,
         templateId: tpl.id,
+        minimalTemplateId: minimalTpl.id,
         adminKey: adminRaw,
         orgKey: orgRaw,
         createdOrgIds,
