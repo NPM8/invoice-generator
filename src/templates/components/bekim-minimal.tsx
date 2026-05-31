@@ -1,11 +1,14 @@
 import React from "react"
 import { Document, Page, View, Text, Image, StyleSheet } from "@react-pdf/renderer"
 import type { InvoicePropsType } from "../types.js"
+import { UNICODE_FONT, registerUnicodeFont } from "../fonts.js"
 
 // "Run, Bekim! Run!" — minimal, whitespace-led invoice in Slovak.
 // Palette from the brand site: blue #0253a2 labels, near-black ink, crimson
 // #c80e45 accent. Numeric borders use *Width (react-pdf treats `border` as a
-// string shorthand). "Helvetica" is the built-in font.
+// string shorthand). Uses DejaVu Sans (Latin-2) so Slovak diacritics render.
+registerUnicodeFont()
+
 const BLUE = "#0253a2"
 const CRIMSON = "#c80e45"
 const INK = "#1b1b1b"
@@ -13,7 +16,7 @@ const MUTED = "#777"
 const LINE = "#e7e7e7"
 
 const styles = StyleSheet.create({
-    page: { padding: 48, fontFamily: "Helvetica", fontSize: 10, color: INK },
+    page: { padding: 48, fontFamily: UNICODE_FONT, fontSize: 10, color: INK },
 
     top: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 30 },
     title: { fontSize: 16, fontWeight: "bold" },
