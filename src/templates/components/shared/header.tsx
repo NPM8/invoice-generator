@@ -25,6 +25,9 @@ interface HeaderProps {
     dueDate: string
     formatDate: (d: string) => string
 
+    sellerCompanyRegistrationNumber?: string | null | undefined
+    sellerLocalTaxId?: string | null | undefined
+    sellerRegistrationDetails?: string | null | undefined
     sellerName: string
     sellerAddress: string
     sellerTaxId?: string | null | undefined
@@ -63,6 +66,9 @@ export function Header(props: HeaderProps) {
                     <Text style={styles.addressTitle}>From</Text>
                     <Text style={[styles.addressText, styles.h1]}>{props.sellerName}</Text>
                     <Text style={styles.addressText}>{props.sellerAddress}</Text>
+                    {props.sellerCompanyRegistrationNumber && <Text style={styles.addressText}>Company registration: {props.sellerCompanyRegistrationNumber}</Text>}
+                    {props.sellerLocalTaxId && <Text style={styles.addressText}>Local tax ID: {props.sellerLocalTaxId}</Text>}
+                    {props.sellerRegistrationDetails && <Text style={styles.addressText}>{props.sellerRegistrationDetails}</Text>}
                     {props.sellerTaxId && <Text style={styles.addressText}>VAT ID: {props.sellerTaxId}</Text>}
                 </View>
 

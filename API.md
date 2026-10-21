@@ -105,6 +105,7 @@ Errors: 401, 404 (no PDF yet / not your org), 500 (`StorageError`).
 ```
 id, orgId, invoiceNumber, templateId, status ('pending'|'processing'|'completed'|'failed'),
 sellerName, sellerAddress, sellerTaxId, sellerTaxIdType, sellerCountryCode,
+sellerCompanyRegistrationNumber, sellerLocalTaxId, sellerRegistrationDetails,
 buyerName, buyerAddress, buyerTaxId, buyerTaxIdType, buyerCountryCode, buyerEmail,
 currency, subtotal, totalVat, total,
 vatSummary: [{ vatRate, vatType, netAmount, vatAmount, grossAmount }],
@@ -132,13 +133,15 @@ notes, terms, metadata, createdAt, updatedAt
   "name": "Buyer Co", "legalName": "Buyer Co Ltd", "countryCode": "FR",
   "addressLine1": "...", "addressLine2": "...", "city": "...", "state": "...",
   "postalCode": "...", "taxId": "...", "taxIdType": "eu_vat|...",
+  "companyRegistrationNumber": "50969684", "localTaxId": "2120546571",
+  "registrationDetails": "Registry court, section and entry (optional text)",
   "email": "...", "phone": "...", "website": "...",
   "bankName": "...", "bankIban": "...", "bankSwift": "...", "bankAccountNumber": "...",
   "logoUrl": "...",
   "defaultCurrency": "EUR (default)", "defaultPaymentTermsDays": 30, "invoicePrefix": "INV"
 }
 ```
-`UpdateOrganization` — all fields optional. Errors: 401, 404 (id routes), 500.
+`UpdateOrganization` — all fields optional. The three legal-detail fields accept null to clear them. New invoices snapshot them; organization edits never rewrite existing invoices or change the numbering sequence. Errors: 401, 404 (id routes), 500.
 
 ---
 

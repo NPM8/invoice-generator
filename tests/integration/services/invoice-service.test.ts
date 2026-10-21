@@ -74,3 +74,40 @@ describe("InvoiceService Integration", () => {
         await Effect.runPromise(Effect.provide(program, TestLayer))
     })
 })
+
+describe("Seller legal snapshots", () => {
+    it("copies legal details into the invoice and retains them after the organization changes", async () => {
+        const org = { countryCode: "SK", legalName: "Bezbarfit s. r. o.", companyRegistrationNumber: "50969684", localTaxId: "2120546571", registrationDetails: "Mestský súd Bratislava III\nOddiel: Sro, vložka číslo: 120761/B" }
+        let inserted: any
+        const client = {
+            rpc: async () => ({ data: "ADM-000009", error: null }),
+            from: (table: string) => ({
+                insert: (row: any) => {
+                    if (table === "invoice_items") return Promise.resolve({ error: null })
+                    inserted = row
+                    return { select: () => ({ single: async () => ({ data: { ...row, id: "11111111-1111-4111-8111-111111111111" }, error: null }) }) }
+                },
+            }),
+        }
+        const TestLayer = InvoiceServiceLive.pipe(
+            Layer.provide(Layer.succeed(DatabaseService, DatabaseService.of({ client: client as any, getAdminClient: () => client as any, getOrgClient: () => Effect.succeed(client as any) }))),
+            Layer.provide(MockQueueService), Layer.provide(MockStorageService),
+            Layer.provide(Layer.succeed(OrganizationService, OrganizationService.of({ create: () => Effect.succeed(org as any), findById: () => Effect.succeed(org as any), update: () => Effect.succeed(org as any), list: () => Effect.succeed([]) }))),
+            Layer.provide(MockTemplateService),
+        )
+        const { Schema } = await import("effect")
+        const { CreateInvoice } = await import("../../../src/shared/schemas/invoice.js")
+        const input = Schema.decodeUnknownSync(CreateInvoice)({ buyerName: "Test buyer", buyerAddress: "Test address", buyerCountryCode: "SK", currency: "EUR", issueDate: "2026-10-21", dueDate: "2026-10-21", items: [{ position: 1, description: "Test item", quantity: 1, unitPrice: 10, vatRate: 23 }] })
+        const invoice = await Effect.runPromise(Effect.provide(Effect.flatMap(InvoiceService, service => service.create("22222222-2222-4222-8222-222222222222", input)), TestLayer))
+        expect(inserted.seller_company_registration_number).toBe("50969684")
+        expect(inserted.seller_local_tax_id).toBe("2120546571")
+        expect(inserted.seller_registration_details).toContain("120761/B")
+        org.companyRegistrationNumber = "changed"
+        org.localTaxId = "changed"
+        org.registrationDetails = "changed"
+        expect(invoice.sellerCompanyRegistrationNumber).toBe("50969684")
+        expect(invoice.sellerLocalTaxId).toBe("2120546571")
+        expect(invoice.sellerRegistrationDetails).toContain("120761/B")
+        expect(invoice.invoiceNumber).toBe("ADM-000009")
+    })
+})

@@ -6,6 +6,9 @@ export interface InvoicePropsType {
     // Seller Snapshot
     sellerName: string
     sellerAddress: string
+    sellerCompanyRegistrationNumber?: string | null
+    sellerLocalTaxId?: string | null
+    sellerRegistrationDetails?: string | null
     sellerTaxId?: string | null
     sellerTaxIdType?: string | null
     sellerCountryCode: string

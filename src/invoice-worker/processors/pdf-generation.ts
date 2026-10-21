@@ -36,6 +36,9 @@ export const handlePdfGeneration = (invoiceId: string) =>
             sellerName: invoice.sellerName,
             sellerAddress: invoice.sellerAddress ?? "",
             sellerTaxId: invoice.sellerTaxId,
+            sellerCompanyRegistrationNumber: invoice.sellerCompanyRegistrationNumber,
+            sellerLocalTaxId: invoice.sellerLocalTaxId,
+            sellerRegistrationDetails: invoice.sellerRegistrationDetails,
             sellerTaxIdType: invoice.sellerTaxIdType,
             sellerCountryCode: invoice.sellerCountryCode,
 

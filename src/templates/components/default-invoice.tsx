@@ -1,4 +1,6 @@
 import React from "react"
+import { UNICODE_FONT, registerUnicodeFont } from "../fonts.js"
+registerUnicodeFont()
 import { Document, Page, View, Text, StyleSheet } from "@react-pdf/renderer"
 import type { InvoicePropsType } from "../types.js"
 
@@ -8,12 +10,10 @@ import { VatSummary } from "./shared/vat-summary.js"
 import { PaymentDetails } from "./shared/payment-details.js"
 import { Footer } from "./shared/footer.js"
 
-// "Helvetica" is a PDF standard built-in font in @react-pdf/renderer.
-// It (and its bold variant via fontWeight) resolves automatically without
-// Font.register, which requires a real font `src` per FontSource.
+// Use the bundled Unicode font for seller names and registry details.
 
 const styles = StyleSheet.create({
-    page: { padding: 40, fontFamily: "Helvetica", fontSize: 10, color: "#333", backgroundColor: "#fff" },
+    page: { padding: 40, fontFamily: UNICODE_FONT, fontSize: 10, color: "#333", backgroundColor: "#fff" },
     notesBox: { marginBottom: 15 },
     notesTitle: { fontWeight: "bold", marginBottom: 5 },
     termsBox: { marginBottom: 30 },
@@ -22,6 +22,7 @@ const styles = StyleSheet.create({
 
 export default function DefaultInvoice({
     invoiceNumber, issueDate, dueDate, sellerName, sellerAddress, sellerTaxId,
+    sellerCompanyRegistrationNumber, sellerLocalTaxId, sellerRegistrationDetails,
     buyerName, buyerAddress, buyerTaxId, currency, subtotal, totalVat, total,
     items, vatSummary, isReverseCharge, logoUrl, bankName, bankIban,
     bankSwift, bankAccountNumber, notes, terms, helpers: { formatCurrency, formatDate }
@@ -39,6 +40,9 @@ export default function DefaultInvoice({
                     sellerName={sellerName}
                     sellerAddress={sellerAddress}
                     sellerTaxId={sellerTaxId}
+                    sellerCompanyRegistrationNumber={sellerCompanyRegistrationNumber}
+                    sellerLocalTaxId={sellerLocalTaxId}
+                    sellerRegistrationDetails={sellerRegistrationDetails}
                     buyerName={buyerName}
                     buyerAddress={buyerAddress}
                     buyerTaxId={buyerTaxId}

@@ -1,4 +1,6 @@
 import React from "react"
+import { UNICODE_FONT, registerUnicodeFont } from "../fonts.js"
+registerUnicodeFont()
 import { Document, Page, View, Text, StyleSheet } from "@react-pdf/renderer"
 import type { InvoicePropsType } from "../types.js"
 
@@ -7,7 +9,7 @@ import type { InvoicePropsType } from "../types.js"
 // react-pdf <Document>. Numeric borders use *Width (react-pdf treats `border` as
 // a string shorthand).
 const styles = StyleSheet.create({
-    page: { padding: 48, fontFamily: "Helvetica", fontSize: 10, color: "#222" },
+    page: { padding: 48, fontFamily: UNICODE_FONT, fontSize: 10, color: "#222" },
     title: { fontSize: 20, fontWeight: "bold", marginBottom: 2 },
     sub: { color: "#777", marginBottom: 20 },
     parties: { flexDirection: "row", justifyContent: "space-between", marginBottom: 24 },
@@ -26,6 +28,7 @@ const styles = StyleSheet.create({
 export default function MinimalInvoice({
     invoiceNumber, issueDate, dueDate,
     sellerName, sellerAddress, sellerTaxId,
+    sellerCompanyRegistrationNumber, sellerLocalTaxId, sellerRegistrationDetails,
     buyerName, buyerAddress,
     currency, subtotal, totalVat, total, items, isReverseCharge,
     helpers: { formatCurrency, formatDate },
@@ -43,7 +46,10 @@ export default function MinimalInvoice({
                         <Text style={styles.label}>From</Text>
                         <Text>{sellerName}</Text>
                         <Text>{sellerAddress}</Text>
-                        {sellerTaxId ? <Text>Tax ID: {sellerTaxId}</Text> : null}
+                        {sellerCompanyRegistrationNumber ? <Text>Company registration: {sellerCompanyRegistrationNumber}</Text> : null}
+                        {sellerLocalTaxId ? <Text>Local tax ID: {sellerLocalTaxId}</Text> : null}
+                        {sellerTaxId ? <Text>VAT ID: {sellerTaxId}</Text> : null}
+                        {sellerRegistrationDetails ? <Text>{sellerRegistrationDetails}</Text> : null}
                     </View>
                     <View style={styles.block}>
                         <Text style={styles.label}>Bill to</Text>

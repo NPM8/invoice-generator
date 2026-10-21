@@ -5,7 +5,7 @@
 > and update any section that drifted (status, architecture, known issues, commands).
 > Stale reference is worse than none.
 
-Last reviewed: 2026-05-31 (typecheck clean + e2e passing end-to-end — see §6)
+Last reviewed: 2026-10-21 (seller legal snapshots, typecheck and live isolated PDF verification)
 
 ---
 
@@ -100,7 +100,7 @@ bun test                 # all tests (transpiles, does NOT typecheck)
 bun run test:unit | test:integration | test:e2e | test:coverage
 bun run seed             # src/scripts/seed.ts
 bun run generate-key     # src/scripts/generate-api-key.ts
-bunx tsc --noEmit        # TYPECHECK — currently fails, see §6
+bunx tsc --noEmit        # TYPECHECK
 ```
 
 Secrets via `wrangler secret put`: `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`,
@@ -154,7 +154,7 @@ Secrets via `wrangler secret put`: `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`,
 
 ### NOT done / broken
 - **README is stale** — default `bun init` boilerplate (`bun run index.ts` no longer exists).
-- No deploy has been run/verified against real CF account (e2e uses local `wrangler dev` + Supabase only).
+- Global API and queue worker deployed and verified on 2026-10-21. An isolated temporary tenant exercised live API → queue → PDF download; the real seller numbering remained unchanged.
 
 ### How the 141 typecheck errors were cleared (reference for similar work)
 1. `shared/errors/index.ts`: `Data.TaggedError` → `Schema.TaggedError` (unblocked all `.addError()`/`failure:`).
@@ -172,7 +172,7 @@ Secrets via `wrangler secret put`: `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`,
    the `Intl` formatters, and move template labels into per-locale dictionaries. (Parked by request.)
 2. (Optional) per-tenant arbitrary-code templates — needs a build-time/bundling step; bundled registry
    (`src/templates/registry.ts`) covers fixed designs today.
-2. Update README. First real deploy against a CF account.
+3. Update the stale README.
 
 ---
 
@@ -182,3 +182,10 @@ Secrets via `wrangler secret put`: `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`,
 - Config from env bindings, never `process.env` (scripts excepted).
 - Tests: WET (explicit, repeated setup over shared abstraction) per repo style.
 - `bun test` transpiles only — **always run `bunx tsc --noEmit` before claiming done.**
+
+## Seller legal details (2026-10-21)
+
+Organizations support companyRegistrationNumber, localTaxId and registrationDetails.
+Migration 005 adds nullable organization fields and invoice seller snapshots.
+All bundled templates render them; Unicode fonts support registry text.
+Organization updates do not change existing invoice snapshots or numbering.

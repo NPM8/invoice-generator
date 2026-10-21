@@ -1082,6 +1082,15 @@
                   "taxId": {
                     "type": "string"
                   },
+                  "companyRegistrationNumber": {
+                    "type": "string"
+                  },
+                  "localTaxId": {
+                    "type": "string"
+                  },
+                  "registrationDetails": {
+                    "type": "string"
+                  },
                   "taxIdType": {
                     "type": "string",
                     "enum": [
@@ -1788,6 +1797,9 @@
           "sellerName",
           "sellerAddress",
           "sellerTaxId",
+          "sellerCompanyRegistrationNumber",
+          "sellerLocalTaxId",
+          "sellerRegistrationDetails",
           "sellerTaxIdType",
           "sellerCountryCode",
           "buyerName",
@@ -1872,6 +1884,36 @@
             ]
           },
           "sellerTaxId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "sellerCompanyRegistrationNumber": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "sellerLocalTaxId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "sellerRegistrationDetails": {
             "anyOf": [
               {
                 "type": "string"
@@ -2511,6 +2553,9 @@
           "postalCode",
           "countryCode",
           "taxId",
+          "companyRegistrationNumber",
+          "localTaxId",
+          "registrationDetails",
           "taxIdType",
           "email",
           "phone",
@@ -2596,6 +2641,36 @@
             "pattern": "^[A-Z]{2}$"
           },
           "taxId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "companyRegistrationNumber": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "localTaxId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "registrationDetails": {
             "anyOf": [
               {
                 "type": "string"
@@ -2805,6 +2880,36 @@
             "pattern": "^[A-Z]{2}$"
           },
           "taxId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "companyRegistrationNumber": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "localTaxId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "registrationDetails": {
             "anyOf": [
               {
                 "type": "string"
