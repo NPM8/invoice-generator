@@ -69,6 +69,9 @@ export class Invoice extends Schema.Class<Invoice>("Invoice")({
   sellerName: Schema.String,
   sellerAddress: Schema.NullOr(Schema.String),
   sellerTaxId: Schema.NullOr(Schema.String),
+  sellerCompanyRegistrationNumber: Schema.NullOr(Schema.String),
+  sellerLocalTaxId: Schema.NullOr(Schema.String),
+  sellerRegistrationDetails: Schema.NullOr(Schema.String),
   sellerTaxIdType: Schema.NullOr(TaxIdType),
   sellerCountryCode: CountryCode,
   // Buyer info

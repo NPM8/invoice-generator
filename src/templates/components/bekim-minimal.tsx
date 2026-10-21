@@ -58,6 +58,7 @@ const styles = StyleSheet.create({
 export default function BekimMinimal({
     invoiceNumber, issueDate, dueDate,
     sellerName, sellerAddress, sellerTaxId,
+    sellerCompanyRegistrationNumber, sellerLocalTaxId, sellerRegistrationDetails,
     buyerName, buyerAddress, buyerTaxId,
     currency, subtotal, totalVat, total, items, isReverseCharge,
     logoUrl, bankName, bankIban, bankSwift,
@@ -89,7 +90,10 @@ export default function BekimMinimal({
                         <Text style={styles.label}>Dodávateľ</Text>
                         <Text style={styles.strong}>{sellerName}</Text>
                         <Text style={styles.line}>{sellerAddress}</Text>
+                        {sellerCompanyRegistrationNumber ? <Text style={styles.line}>IČO: {sellerCompanyRegistrationNumber}</Text> : null}
+                        {sellerLocalTaxId ? <Text style={styles.line}>DIČ: {sellerLocalTaxId}</Text> : null}
                         {sellerTaxId ? <Text style={styles.line}>IČ DPH: {sellerTaxId}</Text> : null}
+                        {sellerRegistrationDetails ? <Text style={styles.line}>{sellerRegistrationDetails}</Text> : null}
                     </View>
                     <View style={styles.blockRight}>
                         <Text style={styles.label}>Odberateľ</Text>

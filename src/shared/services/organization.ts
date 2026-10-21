@@ -28,6 +28,9 @@ const createOrganizationService = Effect.gen(function* () {
         postalCode: row.postal_code,
         countryCode: row.country_code,
         taxId: row.tax_id,
+        companyRegistrationNumber: row.company_registration_number ?? null,
+        localTaxId: row.local_tax_id ?? null,
+        registrationDetails: row.registration_details ?? null,
         taxIdType: row.tax_id_type,
         email: row.email,
         phone: row.phone,
@@ -56,6 +59,9 @@ const createOrganizationService = Effect.gen(function* () {
         if (obj.postalCode !== undefined) result.postal_code = obj.postalCode
         if (obj.countryCode !== undefined) result.country_code = obj.countryCode
         if (obj.taxId !== undefined) result.tax_id = obj.taxId
+        if (obj.companyRegistrationNumber !== undefined) result.company_registration_number = obj.companyRegistrationNumber
+        if (obj.localTaxId !== undefined) result.local_tax_id = obj.localTaxId
+        if (obj.registrationDetails !== undefined) result.registration_details = obj.registrationDetails
         if (obj.taxIdType !== undefined) result.tax_id_type = obj.taxIdType
         if (obj.email !== undefined) result.email = obj.email
         if (obj.phone !== undefined) result.phone = obj.phone
