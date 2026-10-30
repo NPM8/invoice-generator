@@ -12,6 +12,7 @@ export interface InvoicePropsType {
     sellerTaxId?: string | null
     sellerTaxIdType?: string | null
     sellerCountryCode: string
+    sellerEmail?: string | null
 
     // Buyer
     buyerName: string
@@ -32,6 +33,7 @@ export interface InvoicePropsType {
         netAmount: number
         vatAmount: number
         grossAmount: number
+        vatLabel?: string | null
     }>
     isReverseCharge: boolean
 
@@ -47,6 +49,7 @@ export interface InvoicePropsType {
         vatAmount: number
         netAmount: number
         grossAmount: number
+        vatLabel?: string | null
     }>
 
     // Dates
@@ -66,6 +69,13 @@ export interface InvoicePropsType {
     bankSwift?: string | null
     bankAccountNumber?: string | null
 
+    // Platform mode (per-invoice branding / language / payment link)
+    locale?: string | null // "en" | "pl" | "de" | "cs" | "sk"; null => sk-SK formatting
+    accentColor?: string | null // "#rrggbb"
+    brandDisplayName?: string | null
+    paymentUrl?: string | null
+    legalNotes?: ReadonlyArray<string> | null
+
     // Extra
     notes?: string | null
     terms?: string | null
@@ -75,5 +85,6 @@ export interface InvoicePropsType {
     helpers: {
         formatCurrency: (amount: number, currencyCode?: string) => string
         formatDate: (dateString: string) => string
+        formatNumber?: (value: number) => string
     }
 }

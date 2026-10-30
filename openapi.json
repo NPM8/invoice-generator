@@ -96,6 +96,153 @@
                     "format": "uuid",
                     "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
                   },
+                  "templateName": {
+                    "type": "string",
+                    "enum": [
+                      "default-invoice",
+                      "minimal",
+                      "bekim-minimal",
+                      "brand"
+                    ]
+                  },
+                  "externalRef": {
+                    "type": "string",
+                    "description": "a string at most 200 character(s) long",
+                    "title": "maxLength(200)",
+                    "minLength": 1,
+                    "maxLength": 200
+                  },
+                  "invoiceNumber": {
+                    "type": "string",
+                    "description": "a string at most 64 character(s) long",
+                    "pattern": "^[^\\u0000-\\u001F\\u007F]+$",
+                    "title": "maxLength(64)",
+                    "minLength": 1,
+                    "maxLength": 64
+                  },
+                  "seller": {
+                    "type": "object",
+                    "required": [
+                      "name",
+                      "address",
+                      "countryCode"
+                    ],
+                    "properties": {
+                      "name": {
+                        "type": "string",
+                        "description": "a string at most 200 character(s) long",
+                        "title": "maxLength(200)",
+                        "minLength": 1,
+                        "maxLength": 200
+                      },
+                      "address": {
+                        "type": "string",
+                        "description": "a string at most 500 character(s) long",
+                        "title": "maxLength(500)",
+                        "minLength": 1,
+                        "maxLength": 500
+                      },
+                      "countryCode": {
+                        "type": "string",
+                        "description": "a string matching the pattern ^[A-Z]{2}$",
+                        "pattern": "^[A-Z]{2}$"
+                      },
+                      "taxId": {
+                        "type": "string"
+                      },
+                      "taxIdType": {
+                        "type": "string",
+                        "enum": [
+                          "eu_vat",
+                          "us_ein",
+                          "gb_vat",
+                          "au_abn",
+                          "other"
+                        ]
+                      },
+                      "companyRegistrationNumber": {
+                        "type": "string"
+                      },
+                      "localTaxId": {
+                        "type": "string"
+                      },
+                      "registrationDetails": {
+                        "type": "string"
+                      },
+                      "email": {
+                        "type": "string",
+                        "description": "a string matching the pattern ^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$",
+                        "pattern": "^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$"
+                      },
+                      "bankName": {
+                        "type": "string"
+                      },
+                      "bankIban": {
+                        "type": "string"
+                      },
+                      "bankSwift": {
+                        "type": "string"
+                      },
+                      "bankAccountNumber": {
+                        "type": "string"
+                      }
+                    },
+                    "additionalProperties": false
+                  },
+                  "branding": {
+                    "type": "object",
+                    "required": [],
+                    "properties": {
+                      "logoUrl": {
+                        "type": "string",
+                        "description": "a string matching the pattern ^(https:\\/\\/\\S+|data:image\\/(png|jpeg);base64,[A-Za-z0-9+/]+={0,2})$",
+                        "title": "maxLength(2000000)",
+                        "maxLength": 2000000,
+                        "pattern": "^(https:\\/\\/\\S+|data:image\\/(png|jpeg);base64,[A-Za-z0-9+/]+={0,2})$"
+                      },
+                      "accentColor": {
+                        "type": "string",
+                        "description": "a string matching the pattern ^#[0-9a-fA-F]{6}$",
+                        "pattern": "^#[0-9a-fA-F]{6}$"
+                      },
+                      "displayName": {
+                        "type": "string",
+                        "description": "a string at most 200 character(s) long",
+                        "title": "maxLength(200)",
+                        "minLength": 1,
+                        "maxLength": 200
+                      }
+                    },
+                    "additionalProperties": false
+                  },
+                  "locale": {
+                    "type": "string",
+                    "enum": [
+                      "en",
+                      "pl",
+                      "de",
+                      "cs",
+                      "sk"
+                    ]
+                  },
+                  "paymentUrl": {
+                    "type": "string",
+                    "description": "a string matching the pattern ^https?:\\/\\/.+",
+                    "pattern": "^https?:\\/\\/.+"
+                  },
+                  "legalNotes": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "description": "a string at most 1000 character(s) long",
+                      "title": "maxLength(1000)",
+                      "minLength": 1,
+                      "maxLength": 1000
+                    },
+                    "description": "an array of at most 10 item(s)",
+                    "title": "maxItems(10)",
+                    "maxItems": 10
+                  },
                   "buyerName": {
                     "type": "string",
                     "description": "a string at least 1 character(s) long",
@@ -194,6 +341,39 @@
                             "zero_rated",
                             "exempt"
                           ]
+                        },
+                        "amounts": {
+                          "type": "object",
+                          "required": [
+                            "net",
+                            "vat",
+                            "gross"
+                          ],
+                          "properties": {
+                            "net": {
+                              "type": "number",
+                              "description": "a finite number",
+                              "title": "finite"
+                            },
+                            "vat": {
+                              "type": "number",
+                              "description": "a finite number",
+                              "title": "finite"
+                            },
+                            "gross": {
+                              "type": "number",
+                              "description": "a finite number",
+                              "title": "finite"
+                            }
+                          },
+                          "additionalProperties": false
+                        },
+                        "vatLabel": {
+                          "type": "string",
+                          "description": "a string at most 100 character(s) long",
+                          "title": "maxLength(100)",
+                          "minLength": 1,
+                          "maxLength": 100
                         }
                       },
                       "additionalProperties": false
@@ -2054,6 +2234,16 @@
                 },
                 "grossAmount": {
                   "type": "number"
+                },
+                "vatLabel": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
                 }
               },
               "additionalProperties": false
@@ -2125,6 +2315,149 @@
             "anyOf": [
               {
                 "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "externalRef": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "templateName": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "locale": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "en",
+                  "pl",
+                  "de",
+                  "cs",
+                  "sk"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "sellerOverride": {
+            "type": "boolean"
+          },
+          "sellerEmail": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "sellerBankName": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "sellerBankIban": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "sellerBankSwift": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "sellerBankAccountNumber": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "logoUrl": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "accentColor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "brandDisplayName": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "paymentUrl": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "legalNotes": {
+            "anyOf": [
+              {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
               },
               {
                 "type": "null"

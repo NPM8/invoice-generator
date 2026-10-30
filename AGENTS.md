@@ -5,7 +5,7 @@
 > and update any section that drifted (status, architecture, known issues, commands).
 > Stale reference is worse than none.
 
-Last reviewed: 2026-10-21 (seller legal snapshots, typecheck and live isolated PDF verification)
+Last reviewed: 2026-10-30 (platform mode: externalRef idempotency, caller numbers/seller/amounts, brand template, i18n)
 
 ---
 
@@ -145,7 +145,7 @@ Secrets via `wrangler secret put`: `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`,
 
 ### Templates
 - **Bundled templates work** (Path A): `src/templates/registry.ts` maps `invoice_templates.name` →
-  a compiled React component (`default-invoice`, `minimal`); `pdf-generation.ts` selects via
+  a compiled React component (`default-invoice`, `minimal`, `bekim-minimal`, `brand`); `pdf-generation.ts` selects via
   `resolveTemplateComponent(template.name)`, unknown → default. Add a design: new component under
   `src/templates/components/`, register it, create a template row with that `name`, use its `templateId`.
 - **Arbitrary runtime TSX compilation is NOT supported on Workers:** `template-compiler.ts` `compile()`
@@ -167,9 +167,9 @@ Secrets via `wrangler secret put`: `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`,
 7. `api-worker/index.ts`: merge `HttpServer.layerContext` for `DefaultServices`; `HttpMiddleware.cors()` (called).
 
 ### Suggested next steps (priority)
-1. **TODO: multi-language / i18n.** Currently dates/currency are formatted `sk-SK` and template labels are
-   hard-coded Slovak (`bekim-minimal`). Add a `locale` (per-invoice, overriding an org default), pass it into
-   the `Intl` formatters, and move template labels into per-locale dictionaries. (Parked by request.)
+1. **i18n (partly done).** Per-invoice `locale` (en/pl/de/cs/sk) drives the `Intl` formatters for all
+   templates and the labels of `brand` (`src/templates/i18n.ts`). Older templates keep hard-coded labels;
+   an org-level default locale is not implemented (absent locale => sk-SK).
 2. (Optional) per-tenant arbitrary-code templates — needs a build-time/bundling step; bundled registry
    (`src/templates/registry.ts`) covers fixed designs today.
 3. Update the stale README.
@@ -189,3 +189,22 @@ Organizations support companyRegistrationNumber, localTaxId and registrationDeta
 Migration 005 adds nullable organization fields and invoice seller snapshots.
 All bundled templates render them; Unicode fonts support registry text.
 Organization updates do not change existing invoice snapshots or numbering.
+
+## Platform mode (2026-10-30)
+
+One API key (org) renders invoices for many sellers; the caller is the source of truth.
+All `CreateInvoice` fields below are optional — without them behaviour is unchanged
+(the insert omits the new columns entirely, see `compact` in `services/invoice.ts`).
+- `externalRef` — idempotency per org: lookup first, unique index
+  `idx_invoices_org_external_ref` catches races (23505 => return the existing row).
+- `invoiceNumber` — verbatim, skips `generate_invoice_number`. Number uniqueness index is
+  now partial (`WHERE external_ref IS NULL`), so platform sellers may share numbers.
+- `seller` — snapshot from the request (`seller_override = true`); the worker then takes
+  bank details and logo ONLY from the invoice (`buildInvoiceProps` in pdf-generation.ts).
+- `items[].amounts` / `vatLabel` — verbatim line amounts (`computeInvoiceAmounts`); with
+  amounts the caller owns reverse charge (no auto-detection). Summary grouped by rate+type+label.
+- `templateName` (validated against `TemplateName` in `schemas/common.ts`, which must match
+  `BUNDLED_TEMPLATES`) — no DB template row; `template_id` is nullable since migration 006.
+- `branding`, `locale`, `paymentUrl`, `legalNotes` — persisted on the invoice; rendered by `brand`.
+- Migration `006_platform_mode.sql` must be applied before deploying code that sends these fields.
+- react-pdf gotcha: a `lineHeight` on `Page` (or an ancestor) blanks `render`-prop Text (page numbers).

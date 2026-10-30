@@ -37,7 +37,7 @@ Names must match the bindings in `wrangler.api.toml` / `wrangler.invoice.toml`.
 ## 2. Database
 ```bash
 bunx supabase link --project-ref <your-project-ref>
-bunx supabase db push          # applies supabase/migrations 001–003
+bunx supabase db push          # applies supabase/migrations 001–006
 ```
 Bootstrap one admin API key (no unauthenticated key-creation route):
 insert an `api_keys` row with `key_hash` = SHA-256 of a raw `inv_...` key and

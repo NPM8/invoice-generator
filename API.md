@@ -87,11 +87,67 @@ Request (`CreateInvoice`):
 ```
 Response `200` — `Invoice` (see shape below). Errors: 401, 404 (org/template), 500.
 
+#### Platform mode (optional fields)
+For one API key (one org) rendering invoices **on behalf of many sellers** (e.g. a
+SaaS invoicing for each of its operators). The caller is the source of truth:
+the service renders exactly what it sends. All fields are optional; omitting them
+keeps the behaviour above unchanged.
+
+```jsonc
+{
+  "externalRef": "booking-42",          // 1..200. Idempotency key per org: a repeat returns the
+                                         // existing invoice (200, same shape); nothing is created,
+                                         // no number consumed. Concurrent repeats are safe.
+  "invoiceNumber": "FV/2026/10/0042",   // 1..64, no control chars. Used verbatim (org sequence not
+                                         // touched). Per-org number uniqueness applies only to
+                                         // invoices WITHOUT externalRef, so sellers may share numbers.
+  "seller": {                            // Seller snapshot instead of the key's org
+    "name": "Przestrzeń Łódź Sp. z o.o.",   // 1..200
+    "address": "ul. Piotrkowska 120\n90-006 Łódź",  // 1..500 (newlines kept)
+    "countryCode": "PL",                 // also drives reverse-charge auto-detection
+    "taxId": "PL7251234567", "taxIdType": "eu_vat",
+    "companyRegistrationNumber": "0000123456",
+    "localTaxId": "...", "registrationDetails": "...",
+    "email": "faktury@example.pl",
+    "bankName": "mBank", "bankIban": "PL61...", "bankSwift": "BREXPLPW", "bankAccountNumber": "..."
+  },                                     // With seller set, bank details + logo on the PDF come ONLY
+                                         // from the invoice (never the org's).
+  "branding": {
+    "logoUrl": "https://... | data:image/png;base64,... | data:image/jpeg;base64,...", // <= 2,000,000 chars
+    "accentColor": "#0f766e",
+    "displayName": "Przestrzeń Coworking" // shown instead of a logo when none is given
+  },
+  "locale": "en|pl|de|cs|sk",           // PDF labels (brand template) + number/date/currency format.
+                                         // Absent => sk-SK formatting (as before).
+  "templateName": "brand",              // bundled template by name: default-invoice|minimal|bekim-minimal|brand.
+                                         // No invoice_templates row needed (templateId is then null and ignored).
+  "paymentUrl": "https://pay.example.com/i/abc",  // "Pay online" link while unpaid
+  "legalNotes": ["Zwolnienie z VAT: art. 43 ust. 1 pkt 37 ustawy o VAT"],  // <= 10, each 1..1000
+  "items": [{
+    "position": 1, "description": "Desk", "quantity": 1, "unitPrice": 100,
+    "vatRate": 23, "vatType": "standard",
+    "vatLabel": "23%",                   // optional 1..100, shown instead of the numeric rate ("zw", "np")
+    "amounts": { "net": 100, "vat": 23, "gross": 123 }  // optional: used verbatim, no calculation
+  }]
+}
+```
+
+Amounts: when any line carries `amounts`, those lines are stored as given, totals
+are the sums, and the VAT summary groups by `vatRate + vatType + vatLabel`. The
+caller then also owns reverse charge: `isReverseCharge` is true iff a line has
+`vatType: "reverse_charge"` (no auto-detection, so a cross-border invoice with
+local VAT is not mislabelled). Lines without `amounts` are calculated as before.
+
+The `brand` template renders: logo (or display name), accent colour, seller/buyer,
+dates, items (qty, unit, unit price, VAT label/rate, net, gross), VAT summary,
+totals, paid badge or bank details + pay-online link, notes/terms, legal notes and
+page numbers — in the invoice `locale` (default Slovak labels).
+
 ### `GET /api/v1/invoices`
 List the org's invoices. → `200` `Invoice[]`. Errors: 401, 500.
 
 ### `GET /api/v1/invoices/:id`
-→ `200` `{ "invoice": Invoice, "items": InvoiceItem[] }`. Errors: 401, 404, 500.
+→ `200` `{ "invoice": Invoice, "items": InvoiceItem[] }` (items carry `vatLabel`, null when not sent). Errors: 401, 404, 500.
 
 ### `GET /api/v1/invoices/:id/pdf`
 PDF URL metadata. → `200` `{ "url": "/api/v1/invoices/:id/pdf/download" }`.
@@ -108,9 +164,13 @@ sellerName, sellerAddress, sellerTaxId, sellerTaxIdType, sellerCountryCode,
 sellerCompanyRegistrationNumber, sellerLocalTaxId, sellerRegistrationDetails,
 buyerName, buyerAddress, buyerTaxId, buyerTaxIdType, buyerCountryCode, buyerEmail,
 currency, subtotal, totalVat, total,
-vatSummary: [{ vatRate, vatType, netAmount, vatAmount, grossAmount }],
+vatSummary: [{ vatRate, vatType, netAmount, vatAmount, grossAmount, vatLabel? }],
 isReverseCharge, issueDate, dueDate,
 paymentStatus ('paid'|'unpaid'), paymentMethod, paidAt, cardLast4,
+// platform mode (null/false when not used):
+externalRef, templateName, locale, sellerOverride (bool), sellerEmail,
+sellerBankName, sellerBankIban, sellerBankSwift, sellerBankAccountNumber,
+logoUrl, accentColor, brandDisplayName, paymentUrl, legalNotes (string[]),
 pdfUrl, pdfGeneratedAt,
 callbackUrl, callbackStatus, callbackAttempts, callbackLastAttemptAt,
 notes, terms, metadata, createdAt, updatedAt
@@ -164,8 +224,9 @@ default renders without custom code.
   "componentCode": "<TSX source>", "propsSchema": { } }
 ```
 > Rendering: the worker selects a **bundled** React component by the template's
-> `name` (registry in `src/templates/registry.ts` — e.g. `default-invoice`,
-> `minimal`); unknown names fall back to the default. To use one, create a
+> `name` (registry in `src/templates/registry.ts` — `default-invoice`,
+> `minimal`, `bekim-minimal`, `brand`); unknown names fall back to the default.
+> Alternatively pass `templateName` on invoice creation — no template row needed. To use one, create a
 > template row whose `name` matches a registry key, then pass its `templateId`
 > when creating an invoice. Arbitrary `componentCode` compilation at runtime is
 > **not** supported on Workers (esbuild can't run there) — add new designs to the
