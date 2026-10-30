@@ -58,6 +58,14 @@ export type PaymentMethod = typeof PaymentMethod.Type
 export const PaymentStatus = Schema.Literal("paid", "unpaid")
 export type PaymentStatus = typeof PaymentStatus.Type
 
+// PDF label + number/date formatting language
+export const Locale = Schema.Literal("en", "pl", "de", "cs", "sk")
+export type Locale = typeof Locale.Type
+
+// Bundled PDF templates selectable by name (keys of src/templates/registry.ts)
+export const TemplateName = Schema.Literal("default-invoice", "minimal", "bekim-minimal", "brand")
+export type TemplateName = typeof TemplateName.Type
+
 // --- Numeric helpers ---
 
 // Money (finite number, 2 decimal places conceptually)
@@ -89,6 +97,20 @@ export type Email = typeof Email.Type
 // URL
 export const Url = Schema.String.pipe(Schema.pattern(/^https?:\/\/.+/))
 export type Url = typeof Url.Type
+
+// Free text without control characters (e.g. caller-supplied invoice numbers)
+export const SingleLineText = Schema.String.pipe(Schema.pattern(/^[^\u0000-\u001F\u007F]+$/))
+
+// Hex color, e.g. "#0a7cff"
+export const HexColor = Schema.String.pipe(Schema.pattern(/^#[0-9a-fA-F]{6}$/))
+export type HexColor = typeof HexColor.Type
+
+// Logo source: an https URL or an inline PNG/JPEG data URI (rendered by react-pdf)
+export const LogoUrl = Schema.String.pipe(
+  Schema.maxLength(2_000_000),
+  Schema.pattern(/^(https:\/\/\S+|data:image\/(png|jpeg);base64,[A-Za-z0-9+/]+={0,2})$/)
+)
+export type LogoUrl = typeof LogoUrl.Type
 
 // --- Pagination ---
 

@@ -14,6 +14,7 @@ export interface VatSummaryEntry {
     netAmount: number
     vatAmount: number
     grossAmount: number
+    vatLabel?: string | null
 }
 
 export function calculateLineVat(
@@ -41,43 +42,56 @@ export function calculateLineVat(
     return { netAmount, vatAmount, grossAmount }
 }
 
+type SummaryLine = {
+    netAmount: number
+    vatAmount: number
+    grossAmount: number
+    vatRate: number
+    vatType: VatType
+    vatLabel?: string | null | undefined
+}
+
+/** Default grouping (calculated invoices): one entry per VAT rate. */
+export const groupByRate = (line: SummaryLine): string => String(line.vatRate)
+
+/** Grouping for caller-supplied amounts: rate + type + label (e.g. 0% "zw" vs 0% "np"). */
+export const groupByRateTypeLabel = (line: SummaryLine): string =>
+    `${line.vatRate}|${line.vatType}|${line.vatLabel ?? ""}`
+
+const round2 = (n: number) => Number(n.toFixed(2))
+
 export function computeVatSummary(
-    lines: Array<{
-        netAmount: number
-        vatAmount: number
-        grossAmount: number
-        vatRate: number
-        vatType: VatType
-    }>
+    lines: Array<SummaryLine>,
+    groupKey: (line: SummaryLine) => string = groupByRate
 ): VatSummaryEntry[] {
-    const summaryMap = new Map<number, VatSummaryEntry>()
+    const groups = lines.reduce((acc, line) => {
+        const key = groupKey(line)
+        const current = acc.get(key)
+        return acc.set(key, current
+            ? {
+                ...current,
+                netAmount: current.netAmount + line.netAmount,
+                vatAmount: current.vatAmount + line.vatAmount,
+                grossAmount: current.grossAmount + line.grossAmount,
+            }
+            : {
+                vatRate: line.vatRate,
+                vatType: line.vatType,
+                netAmount: line.netAmount,
+                vatAmount: line.vatAmount,
+                grossAmount: line.grossAmount,
+                ...(line.vatLabel ? { vatLabel: line.vatLabel } : {}),
+            })
+    }, new Map<string, VatSummaryEntry>())
 
-    for (const line of lines) {
-        const rate = line.vatRate
-        const current = summaryMap.get(rate) || {
-            vatRate: rate,
-            vatType: line.vatType,
-            netAmount: 0,
-            vatAmount: 0,
-            grossAmount: 0,
-        }
-
-        current.netAmount += line.netAmount
-        current.vatAmount += line.vatAmount
-        current.grossAmount += line.grossAmount
-
-        summaryMap.set(rate, current)
-    }
-
-    const result = Array.from(summaryMap.values()).map((entry) => ({
-        vatRate: entry.vatRate,
-        vatType: entry.vatType,
-        netAmount: Number(entry.netAmount.toFixed(2)),
-        vatAmount: Number(entry.vatAmount.toFixed(2)),
-        grossAmount: Number(entry.grossAmount.toFixed(2)),
-    }))
-
-    return result.sort((a, b) => a.vatRate - b.vatRate)
+    return Array.from(groups.values())
+        .map((entry) => ({
+            ...entry,
+            netAmount: round2(entry.netAmount),
+            vatAmount: round2(entry.vatAmount),
+            grossAmount: round2(entry.grossAmount),
+        }))
+        .sort((a, b) => a.vatRate - b.vatRate)
 }
 
 export function computeInvoiceTotals(

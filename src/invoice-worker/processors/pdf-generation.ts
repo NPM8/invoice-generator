@@ -7,7 +7,95 @@ import { QueueService } from "../../shared/services/queue.js"
 import { LoggerService } from "../../shared/services/logger.js"
 import { PdfService } from "../services/pdf.js"
 import { resolveTemplateComponent } from "../../templates/registry.js"
+import { makeFormatters } from "../../templates/i18n.js"
 import type { InvoicePropsType } from "../../templates/types.js"
+import type { Invoice, InvoiceItem } from "../../shared/schemas/invoice.js"
+import type { Organization } from "../../shared/schemas/organization.js"
+
+type OrgBranding = Pick<typeof Organization.Type, "logoUrl" | "bankName" | "bankIban" | "bankSwift" | "bankAccountNumber">
+
+/**
+ * Template props from the stored invoice. Invoices whose seller came from the
+ * request (platform mode) never read logo/bank details from the org: those belong
+ * to the platform, not to the seller. Otherwise the org stays the live source and
+ * a per-invoice branding logo wins over the org logo.
+ */
+export const buildInvoiceProps = (
+    invoice: typeof Invoice.Type,
+    items: ReadonlyArray<typeof InvoiceItem.Type>,
+    org: OrgBranding,
+): InvoicePropsType => {
+    const fromInvoice = invoice.sellerOverride === true
+    return {
+        invoiceId: invoice.id,
+        invoiceNumber: invoice.invoiceNumber,
+        orgId: invoice.orgId,
+
+        sellerName: invoice.sellerName,
+        sellerAddress: invoice.sellerAddress ?? "",
+        sellerTaxId: invoice.sellerTaxId,
+        sellerCompanyRegistrationNumber: invoice.sellerCompanyRegistrationNumber,
+        sellerLocalTaxId: invoice.sellerLocalTaxId,
+        sellerRegistrationDetails: invoice.sellerRegistrationDetails,
+        sellerTaxIdType: invoice.sellerTaxIdType,
+        sellerCountryCode: invoice.sellerCountryCode,
+        sellerEmail: invoice.sellerEmail ?? null,
+
+        buyerName: invoice.buyerName,
+        buyerAddress: invoice.buyerAddress,
+        buyerTaxId: invoice.buyerTaxId,
+        buyerTaxIdType: invoice.buyerTaxIdType,
+        buyerCountryCode: invoice.buyerCountryCode,
+        buyerEmail: invoice.buyerEmail,
+
+        currency: invoice.currency,
+        subtotal: invoice.subtotal,
+        totalVat: invoice.totalVat,
+        total: invoice.total,
+        vatSummary: invoice.vatSummary.map((v) => ({ ...v, vatLabel: v.vatLabel ?? null })),
+        isReverseCharge: invoice.isReverseCharge,
+
+        items: items.map((item) => ({
+            position: item.position,
+            description: item.description,
+            quantity: item.quantity,
+            unit: item.unit,
+            unitPrice: item.unitPrice,
+            discountPercent: item.discountPercent,
+            vatRate: item.vatRate,
+            vatAmount: item.vatAmount,
+            netAmount: item.netAmount,
+            grossAmount: item.grossAmount,
+            vatLabel: item.vatLabel ?? null,
+        })),
+
+        issueDate: invoice.issueDate,
+        dueDate: invoice.dueDate,
+
+        paymentStatus: invoice.paymentStatus,
+        paymentMethod: invoice.paymentMethod,
+        paidAt: invoice.paidAt,
+        cardLast4: invoice.cardLast4,
+
+        logoUrl: invoice.logoUrl ?? (fromInvoice ? null : org.logoUrl),
+        bankName: fromInvoice ? invoice.sellerBankName ?? null : org.bankName,
+        bankIban: fromInvoice ? invoice.sellerBankIban ?? null : org.bankIban,
+        bankSwift: fromInvoice ? invoice.sellerBankSwift ?? null : org.bankSwift,
+        bankAccountNumber: fromInvoice ? invoice.sellerBankAccountNumber ?? null : org.bankAccountNumber,
+
+        locale: invoice.locale ?? null,
+        accentColor: invoice.accentColor ?? null,
+        brandDisplayName: invoice.brandDisplayName ?? null,
+        paymentUrl: invoice.paymentUrl ?? null,
+        legalNotes: invoice.legalNotes ?? null,
+
+        notes: invoice.notes,
+        terms: invoice.terms,
+        metadata: invoice.metadata,
+
+        helpers: makeFormatters(invoice.locale, invoice.currency),
+    }
+}
 
 export const handlePdfGeneration = (invoiceId: string) =>
     Effect.gen(function* () {
@@ -26,78 +114,15 @@ export const handlePdfGeneration = (invoiceId: string) =>
         // Org branding (logo, bank details) for the template.
         const org = yield* orgService.findById(invoice.orgId)
 
-        const template = yield* templateService.findById(invoice.templateId!)
+        // Bundled template by name (platform mode) or via the invoice_templates row.
+        const templateName = invoice.templateName
+            ?? (yield* templateService.findById(invoice.templateId!)).name
 
-        const props: InvoicePropsType = {
-            invoiceId: invoice.id,
-            invoiceNumber: invoice.invoiceNumber,
-            orgId: invoice.orgId,
-
-            sellerName: invoice.sellerName,
-            sellerAddress: invoice.sellerAddress ?? "",
-            sellerTaxId: invoice.sellerTaxId,
-            sellerCompanyRegistrationNumber: invoice.sellerCompanyRegistrationNumber,
-            sellerLocalTaxId: invoice.sellerLocalTaxId,
-            sellerRegistrationDetails: invoice.sellerRegistrationDetails,
-            sellerTaxIdType: invoice.sellerTaxIdType,
-            sellerCountryCode: invoice.sellerCountryCode,
-
-            buyerName: invoice.buyerName,
-            buyerAddress: invoice.buyerAddress,
-            buyerTaxId: invoice.buyerTaxId,
-            buyerTaxIdType: invoice.buyerTaxIdType,
-            buyerCountryCode: invoice.buyerCountryCode,
-            buyerEmail: invoice.buyerEmail,
-
-            currency: invoice.currency,
-            subtotal: invoice.subtotal,
-            totalVat: invoice.totalVat,
-            total: invoice.total,
-            vatSummary: invoice.vatSummary.map((v) => ({ ...v })),
-            isReverseCharge: invoice.isReverseCharge,
-
-            items: items.map((item) => ({
-                position: item.position,
-                description: item.description,
-                quantity: item.quantity,
-                unit: item.unit,
-                unitPrice: item.unitPrice,
-                discountPercent: item.discountPercent,
-                vatRate: item.vatRate,
-                vatAmount: item.vatAmount,
-                netAmount: item.netAmount,
-                grossAmount: item.grossAmount,
-            })),
-
-            issueDate: invoice.issueDate,
-            dueDate: invoice.dueDate,
-
-            paymentStatus: invoice.paymentStatus,
-            paymentMethod: invoice.paymentMethod,
-            paidAt: invoice.paidAt,
-            cardLast4: invoice.cardLast4,
-
-            logoUrl: org.logoUrl,
-            bankName: org.bankName,
-            bankIban: org.bankIban,
-            bankSwift: org.bankSwift,
-            bankAccountNumber: org.bankAccountNumber,
-
-            notes: invoice.notes,
-            terms: invoice.terms,
-            metadata: invoice.metadata,
-
-            helpers: {
-                formatCurrency: (amount: number, currencyCode: string = invoice.currency) =>
-                    new Intl.NumberFormat("sk-SK", { style: "currency", currency: currencyCode }).format(amount),
-                formatDate: (dateString: string) =>
-                    new Date(dateString).toLocaleDateString("sk-SK"),
-            }
-        }
+        const props = buildInvoiceProps(invoice, items, org)
 
         // Bundled templates are selected by name (no runtime TSX compilation on
         // Workers); unknown names fall back to the default. See templates/registry.ts.
-        const Component = resolveTemplateComponent(template.name)
+        const Component = resolveTemplateComponent(templateName)
 
         const buffer = yield* pdfService.renderToBuffer(Component, props)
 

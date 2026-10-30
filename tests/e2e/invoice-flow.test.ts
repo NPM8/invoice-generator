@@ -299,5 +299,79 @@ describe.skipIf(!pf.available)(
             const buf = await dl.arrayBuffer()
             expect(new Uint8Array(buf.slice(0, 4))).toEqual(new Uint8Array([0x25, 0x50, 0x44, 0x46]))
         }, 30_000)
+
+        // --- Platform mode ------------------------------------------------------
+
+        it("renders a platform-mode invoice (seller, number, amounts, brand template by name)", async () => {
+            const createRes = await fetch(`${config.baseUrl}/api/v1/invoices`, {
+                method: "POST",
+                headers: { "content-type": "application/json", "x-api-key": fx.orgKey },
+                body: JSON.stringify({
+                    externalRef: `e2e-platform-${crypto.randomUUID()}`,
+                    invoiceNumber: "FV/2026/10/0001",
+                    templateName: "brand",
+                    locale: "pl",
+                    seller: { name: "Przestrzeń Łódź Sp. z o.o.", address: "ul. Piotrkowska 120, Łódź", countryCode: "PL", taxId: "PL7251234567", bankIban: "PL61109010140000071219812874" },
+                    branding: { accentColor: "#0f766e", displayName: "Przestrzeń" },
+                    paymentUrl: "https://pay.example.com/i/abc",
+                    legalNotes: ["Zwolnienie z VAT: art. 43 ust. 1 pkt 37"],
+                    buyerName: "Kowalski Sp. z o.o.",
+                    buyerAddress: "ul. Długa 1, Gdańsk",
+                    buyerCountryCode: "PL",
+                    currency: "PLN",
+                    issueDate: "2026-10-30",
+                    dueDate: "2026-11-13",
+                    items: [
+                        { position: 1, description: "Biurko", quantity: 1, unitPrice: 100, vatRate: 23, amounts: { net: 100, vat: 23, gross: 123 } },
+                        { position: 2, description: "Adres", quantity: 1, unitPrice: 50, vatRate: 0, vatType: "exempt", vatLabel: "zw", amounts: { net: 50, vat: 0, gross: 50 } },
+                    ],
+                }),
+            })
+            expect(createRes.status).toBe(200)
+            const inv = await createRes.json() as any
+            expect(inv.invoiceNumber).toBe("FV/2026/10/0001")
+            expect(inv.templateId).toBeNull()
+            expect(inv.templateName).toBe("brand")
+            expect(inv.sellerName).toBe("Przestrzeń Łódź Sp. z o.o.")
+            expect(inv.total).toBe(173)
+
+            const { batch, acked } = makeQueueBatch([{ type: "pdf-generation", invoiceId: inv.id }])
+            await invoiceWorker.queue(batch, workerEnv, makeCtx())
+            expect(acked).toEqual([0])
+
+            const api = makeApiHandler(workerEnv)
+            const dl = await api(
+                new Request(`http://e2e/api/v1/invoices/${inv.id}/pdf/download`, {
+                    headers: { "x-api-key": fx.orgKey },
+                }),
+            )
+            expect(dl.status).toBe(200)
+            const buf = await dl.arrayBuffer()
+            expect(new Uint8Array(buf.slice(0, 4))).toEqual(new Uint8Array([0x25, 0x50, 0x44, 0x46]))
+        }, 30_000)
+
+        it("returns the same invoice for a repeated externalRef", async () => {
+            const body = JSON.stringify({
+                externalRef: `e2e-idem-${crypto.randomUUID()}`,
+                invoiceNumber: "INV-0001",
+                templateName: "brand",
+                buyerName: "Acme Buyer",
+                buyerAddress: "10 Buyer Ave, Warsaw",
+                buyerCountryCode: "PL",
+                currency: "PLN",
+                issueDate: "2026-10-30",
+                dueDate: "2026-11-13",
+                items: [{ position: 1, description: "Desk", quantity: 1, unitPrice: 100, vatRate: 23 }],
+            })
+            const headers = { "content-type": "application/json", "x-api-key": fx.orgKey }
+            const first = await fetch(`${config.baseUrl}/api/v1/invoices`, { method: "POST", headers, body })
+            const second = await fetch(`${config.baseUrl}/api/v1/invoices`, { method: "POST", headers, body })
+            expect(first.status).toBe(200)
+            expect(second.status).toBe(200)
+            const a = await first.json() as any
+            const b = await second.json() as any
+            expect(b.id).toBe(a.id)
+            expect(b.invoiceNumber).toBe("INV-0001")
+        })
     },
 )
